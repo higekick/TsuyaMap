@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">OpenTsuyama</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="menu_shiyakusho">市役所</string>
+    <string name="menu_primaryschool">小学校</string>
+    <string name="menu_juniorhighschool">中学校</string>
+    <string name="menu_publicfacilities">公民館等集会施設</string>
+    <string name="menu_libraries">市立図書館</string>
+    <string name="menu_culturecenter">文化センター等</string>
+    <string name="menu_hoikuen">保育園保育所</string>
+    <string name="menu_youchien">幼稚園</string>
+    <string name="menu_jidoukan">児童館</string>
+    <string name="menu_HP">津山市ホームページ</string>
+
+    <string name="url_csv_shiyakushoichi">https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shiyakushoichi_2016.11.CSV</string>
+    <string name="url_csv_shougakkouichi">https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shougakkouichi_2016.11.CSV</string>
+    <string name="url_csv_juniorhighschool">https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_chugakkouichi_2016.11.CSV</string>
+    <string name="url_csv_publicfacilities">https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_kouminkanichi_2016.11.CSV</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="tsuyama_city_hp">https://www.city.tsuyama.lg.jp/top.php</string>
+</resources>
