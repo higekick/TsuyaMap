@@ -1,0 +1,37 @@
+[
+  { "id": "shiyakusho",
+    "icon": "ic_menu_camera",
+    "name": "市役所",
+    "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shiyakushoichi_2016.11.CSV"
+  },
+  {
+    "id": "primarySchool",
+    "icon": "ic_menu_gallery",
+    "name": "小学校",
+    "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shougakkouichi_2016.11.CSV"
+  },
+  {
+    "id": "juniorHighSchool",
+    "icon": "ic_menu_slideshow",
+    "name": "中学校",
+    "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_chugakkouichi_2016.11.CSV"
+  },
+  {
+    "id": "aedPosition",
+    "icon": "ic_menu_camera",
+    "name": "AED設置場所",
+    "url": "http://www.okayama-opendata.jp/ckan/dataset/057117ba-a22d-41b1-bf47-eb6c68d8ea26/resource/5da4e1f7-278d-4325-8d11-58035f64a290/download/tsuyamashiaed.csv"
+  },
+  {
+    "id": "haikibutsu",
+    "icon": "ic_menu_gallery",
+    "name": "廃棄物処理施設",
+    "url": "http://www.okayama-opendata.jp/ckan/dataset/e18d609b-812a-4326-bbd5-b845a9c19483/resource/e08f630e-ba55-4c00-bc20-8f1a0fb369c7/download/tsuyamashihaikibutsushorishisetsu.csv"
+  },
+  {
+    "id": "park",
+    "icon": "ic_menu_gallery",
+    "name": "公園等",
+    "url": "http://www.okayama-opendata.jp/ckan/dataset/5d03df01-11d8-4dde-b972-4d4aa5041a17/resource/55b6e971-4eb8-4c34-9c8b-ead5b7ba3cfe/download/tsuyamashitoshikouentou.csv"
+  }
+]

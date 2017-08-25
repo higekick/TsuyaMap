@@ -20,6 +20,14 @@
                     android:id="@+id/nav_manage"
                     android:icon="@drawable/ic_menu_manage"
                     android:title="@string/menu_publicfacilities" />
+                <item
+                    android:id="@+id/nav_haikibutsu"
+                    android:icon="@drawable/ic_menu_slideshow"
+                    android:title="@string/menu_haikibutsu" />
+                <item
+                    android:id="@+id/nav_AED_install_place"
+                    android:icon="@drawable/ic_menu_send"
+                    android:title="@string/menu_aed_install" />
             </menu>
         </item>
     </group>
