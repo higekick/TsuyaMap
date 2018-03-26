@@ -22,11 +22,12 @@ public class OpenTsuyama extends Application {
         // Create a RealmConfiguration that saves the Realm file in the app's "files" directory.
         RealmConfiguration realmConfig;
         try{
-            realmConfig = new RealmConfiguration.Builder(this)
+            Realm.init(getApplicationContext());
+            realmConfig = new RealmConfiguration.Builder().deleteRealmIfMigrationNeeded()
                     .schemaVersion(0)
                     .build();
         }catch (RealmMigrationNeededException e){
-            realmConfig = new RealmConfiguration.Builder(this)
+            realmConfig = new RealmConfiguration.Builder()
                     .deleteRealmIfMigrationNeeded()
                     .build();
         }
