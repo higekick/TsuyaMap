@@ -23,6 +23,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+
 public class MainActivity extends AppCompatActivity {
 
     // button to change contents
@@ -51,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
             }
             changeToMap();
         }
+
+        AWSMobileClient.getInstance().initialize(this).execute();
     }
 
     private void changeToMap(){
