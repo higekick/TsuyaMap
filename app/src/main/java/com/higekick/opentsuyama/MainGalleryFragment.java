@@ -118,7 +118,7 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
             lay.addView(imageView);
 
             Picasso
-                    .with(getActivity())
+                    .get()
                     .load(url)
                     .placeholder(R.drawable.ic_photo_grey_50_18dp)
                     .fit()

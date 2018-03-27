@@ -16,7 +16,6 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 import static android.content.Context.WINDOW_SERVICE;
-import static com.squareup.picasso.Picasso.with;
 
 /**
  * Created by User on 2017/08/27.
@@ -79,7 +78,7 @@ public class ImageAdapter extends BaseAdapter {
         String url = getItem(position);
 
         Picasso
-                .with(mActivity)
+                .get()
                 .load(url)
                 .placeholder(R.drawable.ic_photo_grey_50_18dp)
                 .resize(imageViewWidth,imageViewHeight)
