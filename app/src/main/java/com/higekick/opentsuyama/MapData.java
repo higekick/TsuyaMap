@@ -9,22 +9,28 @@ import org.json.JSONObject;
  * Created by User on 2017/08/21.
  */
 
-public class MapData {
+public class MapData extends AbstractContentData{
 
-    public String id;
-    public String icon;
-    public String name;
     public String url;
 
+    @Override
     public void importFromJson(JSONObject j){
         try {
-            this.id = j.getString("id");
-            this.icon = j.getString("icon");
-            this.name = j.getString("name");
+            super.importFromJson(j);
             this.url = j.getString("url");
         } catch (JSONException ex){
             Log.d("MapData","unhandled Exception.", ex);
         }
+    }
+
+    @Override
+    public AbstractContentData newInstance() {
+        return new MapData();
+    }
+
+    @Override
+    public String getFragmentClassName(){
+        return MainMapFragment.class.getSimpleName();
     }
 
 }

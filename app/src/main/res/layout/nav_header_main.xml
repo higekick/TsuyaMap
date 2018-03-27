@@ -28,6 +28,7 @@
         android:layout_toRightOf="@+id/imageView"
         android:layout_alignTop="@+id/imageView"
         android:text="Map"
+        android:layout_marginLeft="10dp"
         />
 
     <Button
@@ -38,5 +39,6 @@
         android:layout_toRightOf="@+id/imageView"
         android:layout_alignBottom="@+id/imageView"
         android:text="Gallery"
+        android:layout_marginLeft="10dp"
         />
 </RelativeLayout>

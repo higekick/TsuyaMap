@@ -5,6 +5,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="menu_section_position">"位置情報"</string>
+    <string name="menu_section_gallery">"津山の風景"</string>
 
     <string name="menu_shiyakusho">市役所</string>
     <string name="menu_primaryschool">小学校</string>
@@ -31,4 +32,7 @@
     <string name="tsuyama_city_hp">https://www.city.tsuyama.lg.jp/top.php</string>
 
     <string name="google_map">"GoogleMap"</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
