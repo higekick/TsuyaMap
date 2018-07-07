@@ -25,6 +25,8 @@
             </intent-filter>
         </activity>
 
+        <service android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService" android:enabled="true" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDMumOVZHp6oKpCuTTK67Ge1KcTvB9tBtU"/>

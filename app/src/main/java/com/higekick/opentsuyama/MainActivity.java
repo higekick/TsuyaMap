@@ -1,5 +1,7 @@
 package com.higekick.opentsuyama;
 
+import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -15,13 +17,24 @@ import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.higekick.opentsuyama.aws.S3ClientManager;
 import com.higekick.opentsuyama.util.Util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.List;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 
@@ -54,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
             changeToMap();
         }
 
-        AWSMobileClient.getInstance().initialize(this).execute();
+        S3ClientManager.initAWSClient(this);
     }
 
     private void changeToMap(){
