@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/OpenTsuyama.iml" filepath="$PROJECT_DIR$/OpenTsuyama.iml" />
       <module fileurl="file://$PROJECT_DIR$/TsuyaMap.iml" filepath="$PROJECT_DIR$/TsuyaMap.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>

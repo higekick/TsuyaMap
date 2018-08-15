@@ -1,7 +1,11 @@
 package com.higekick.opentsuyama.util;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.net.Uri;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +17,10 @@ import android.widget.ImageView;
 import com.higekick.opentsuyama.R;
 import com.squareup.picasso.Picasso;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.List;
 
 import static android.content.Context.WINDOW_SERVICE;
@@ -22,6 +30,7 @@ import static android.content.Context.WINDOW_SERVICE;
  */
 
 public class ImageAdapter extends BaseAdapter {
+    private static String TAG = ImageAdapter.class.getSimpleName();
     private static final int IMAGE_PADDING = 10;
 
     private Activity mActivity;
@@ -76,16 +85,21 @@ public class ImageAdapter extends BaseAdapter {
         }
 
         String url = getItem(position);
+        Bitmap bitmap = Util.createGalleryBitmap(url, mActivity);
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap);
+            return imageView;
+        } else {
+            return null;
+        }
+//        Picasso
+//                .get()
+//                .load(url)
+//                .placeholder(R.drawable.ic_photo_grey_50_18dp)
+//                .resize(imageViewWidth,imageViewHeight)
+//                .centerCrop()
+//                .error(R.drawable.ic_error_outline_red_300_36dp)
+//                .into(imageView);
 
-        Picasso
-                .get()
-                .load(url)
-                .placeholder(R.drawable.ic_photo_grey_50_18dp)
-                .resize(imageViewWidth,imageViewHeight)
-                .centerCrop()
-                .error(R.drawable.ic_error_outline_red_300_36dp)
-                .into(imageView);
-
-        return imageView;
     }
 }

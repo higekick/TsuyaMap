@@ -1,6 +1,7 @@
 package com.higekick.opentsuyama;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,12 +27,19 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.higekick.opentsuyama.aws.S3ClientManager;
+import com.higekick.opentsuyama.util.Const;
 import com.higekick.opentsuyama.util.Util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
@@ -94,6 +102,49 @@ public class MainActivity extends AppCompatActivity {
 
         // set left side menu from json assets
         setupSideMenu(new GalleryData(), nv, R.raw.gallery_data);
+        setupSideMenuFromFile(new GalleryData(), nv, R.raw.gallery_data);
+    }
+
+    private void setupSideMenuFromFile(final AbstractContentData contentData, NavigationView nv,int idJsonFile){
+        Context con = this;
+        String dirPathImage = con.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX;
+        File dirFileImage = new File(dirPathImage);
+        String[] dirList = dirFileImage.list();
+
+        // setup menus
+        final HashMap<Integer, AbstractContentData> mapDataHashMap;
+        if (contentData instanceof MapData){
+//            mapDataHashMap = setupMapMenuItem(nv,datas,contentData);
+            // Todo inflate data
+            mapDataHashMap = null;
+        } else if (contentData instanceof GalleryData){
+            SubMenu sm = nv.getMenu().addSubMenu(R.string.menu_section_gallery);
+//            mapDataHashMap = setupGalleryMenuItem(sm,datas,contentData);
+            mapDataHashMap = setupGalleryMenuItemFromFile(sm,dirList,contentData);
+        } else {
+            // nothing to do
+            return;
+        }
+
+        // left side menu select action
+        nv.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                AbstractContentData data = mapDataHashMap.get(id);
+
+                IMainFragmentExecuter fragment = (IMainFragmentExecuter) getSupportFragmentManager().findFragmentByTag(contentData.getFragmentClassName());
+                if (fragment != null) {
+                    fragment.executeLoading(data);
+                }
+
+                setTitle(data.name);
+                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                drawer.closeDrawer(GravityCompat.START);
+
+                return false;
+            }
+        });
     }
 
     private void setupSideMenu(final AbstractContentData contentData, NavigationView nv,int idJsonFile){
@@ -111,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (contentData instanceof GalleryData){
             SubMenu sm = nv.getMenu().addSubMenu(R.string.menu_section_gallery);
             mapDataHashMap = setupGalleryMenuItem(sm,datas,contentData);
+//            mapDataHashMap = setupGalleryMenuItemFromFile(sm,datas,contentData);
         } else {
             // nothing to do
             return;
@@ -159,6 +211,47 @@ public class MainActivity extends AppCompatActivity {
             }
         }
        return mapDataHashMap;
+    }
+
+    private HashMap<Integer, AbstractContentData> setupGalleryMenuItemFromFile(SubMenu sm, String[] dirs, final AbstractContentData contentData) {
+        final HashMap<Integer, AbstractContentData> mapDataHashMap = new HashMap<>();
+
+        for (int i = 0; i <= dirs.length - 1; i++) {
+            AbstractContentData data = contentData.newInstance();
+            data.importFromFile(this, dirs[i]);
+            int resIconId = getResources().getIdentifier("ic_menu_camera", "drawable", this.getPackageName());
+//                int picNum = ((GalleryData) data).picUrls.size();
+            int picNum = 10;
+            sm.add(0, i, i, getDirName(dirs[i]) + " (" + picNum + ")").setIcon(resIconId);
+            mapDataHashMap.put(i, data);
+        }
+        return mapDataHashMap;
+    }
+
+    private String getDirName(String dirId){
+        String pathDir = this.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX + "/" + dirId + "/" + "dirname.txt";
+        File f = new File(pathDir);
+        if (f.exists()) {
+
+            Uri uri = Uri.fromFile(f);
+            InputStream stream;
+            try {
+                stream = this.getContentResolver().openInputStream(uri);
+                InputStreamReader inputStreamReader = new InputStreamReader(stream);
+                BufferedReader bufferReader = new BufferedReader(inputStreamReader);
+                String line;
+                while ((line = bufferReader.readLine()) != null) {
+                    return line;
+                }
+            } catch (FileNotFoundException ex) {
+                Log.e("LoadingImage", "failed to load image.", ex);
+                return null;
+            } catch (IOException ex) {
+                Log.e("LoadingImage", "failed to load image.", ex);
+                return null;
+            }
+        }
+        return "";
     }
 
     private HashMap<Integer, AbstractContentData> setupGalleryMenuItem(SubMenu sm, JSONArray datas, final AbstractContentData contentData) {

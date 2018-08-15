@@ -116,15 +116,19 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
 
             imageView.setLayoutParams(new ViewGroup.LayoutParams(screenWidth,screenHeight));
             lay.addView(imageView);
+            Bitmap bitmap = Util.createGalleryBitmap(url, getContext());
+            if (bitmap != null) {
+                imageView.setImageBitmap(bitmap);
+            }
 
-            Picasso
-                    .get()
-                    .load(url)
-                    .placeholder(R.drawable.ic_photo_grey_50_18dp)
-                    .fit()
-                    .centerInside()
-                    .error(R.drawable.ic_error_outline_red_300_36dp)
-                    .into(imageView);
+//            Picasso
+//                    .get()
+//                    .load(url)
+//                    .placeholder(R.drawable.ic_photo_grey_50_18dp)
+//                    .fit()
+//                    .centerInside()
+//                    .error(R.drawable.ic_error_outline_red_300_36dp)
+//                    .into(imageView);
 
             imageView.invalidate();
 

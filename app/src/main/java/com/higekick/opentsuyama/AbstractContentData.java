@@ -1,5 +1,6 @@
 package com.higekick.opentsuyama;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -32,4 +33,10 @@ public abstract class AbstractContentData {
     public abstract AbstractContentData newInstance();
 
     public abstract String getFragmentClassName();
+
+    public void importFromFile(Context context, String dir){
+        this.id = dir;
+        this.name = dir;
+    };
+
 }

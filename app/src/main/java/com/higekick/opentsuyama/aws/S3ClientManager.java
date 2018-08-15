@@ -12,27 +12,33 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.higekick.opentsuyama.util.Const;
+
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.net.URLCodec;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static com.higekick.opentsuyama.util.Const.IMG_PRFX;
+
 public class S3ClientManager {
     public final static String TAG = S3ClientManager.class.getSimpleName();
 
     public static final String BUCKET_NAME = "tsuyama-open";
-    private static final String IMG_PRFX = "jpg";
-    private static final String JSON_PRFX = "json";
 
     public static void initAWSClient(final Context context){
 
@@ -60,7 +66,7 @@ public class S3ClientManager {
 
     private static void retrieveImage(AmazonS3Client c, TransferUtility t, Context con){
         // create parent img directory
-        File imgDir = new File(con.getFilesDir().getAbsolutePath() + "/" + IMG_PRFX);
+        File imgDir = new File(con.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX);
         if (imgDir.exists()) {
             imgDir.delete();
             Log.d(TAG, "img directory deleted;");
@@ -70,8 +76,9 @@ public class S3ClientManager {
         }
 
         // download from S3
-        ObjectListing list = c.listObjects(BUCKET_NAME, IMG_PRFX);
+        ObjectListing list = c.listObjects(BUCKET_NAME, Const.IMG_PRFX);
         List<S3ObjectSummary> obsmry = list.getObjectSummaries();
+        URLCodec codec = new URLCodec("UTF-8");
         for(S3ObjectSummary s : obsmry){
             String key = s.getKey();
             Log.d(TAG, key);
@@ -80,10 +87,24 @@ public class S3ClientManager {
             if (dirName == null || fileName == null) {
                 continue;
             }
-            S3Object obj = c.getObject(s.getBucketName(), key);
-            String savePath = con.getFilesDir().getAbsolutePath() + "/" + IMG_PRFX +"/" + dirName + "/" + fileName;
-            Log.d(TAG, savePath);
-            downloadFileFromS3(t, key, savePath);
+
+            String encodedResult = "";
+            try {
+                encodedResult = codec.encode(key, "UTF-8");
+                Log.d(TAG, "エンコード結果:" + encodedResult);
+                String decodedResult = codec.decode(encodedResult, "UTF-8");
+                Log.d(TAG,"デコード結果:" + decodedResult);
+            } catch (UnsupportedEncodingException ex) {
+            } catch (DecoderException ex) {
+            }
+            try {
+//                S3Object obj = c.getObject(s.getBucketName(), encodedResult);
+                String savePath = con.getFilesDir().getAbsolutePath() + "/" + IMG_PRFX + "/" + dirName + "/" + fileName;
+                Log.d(TAG, savePath);
+                downloadFileFromS3(t, key, savePath);
+            } catch (AmazonS3Exception ex) {
+                Log.e(TAG, "error!", ex);
+            }
 //            InputStream is = obj.getObjectContent();
 //            File saveFile = new File(savePath);
 //            FileOutputStream output = null;
