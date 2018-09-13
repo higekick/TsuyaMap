@@ -1,6 +1,12 @@
 package com.higekick.opentsuyama;
 
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -52,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnChangeToMap;
     Button btnChangeToGallery;
 
+    MyBroadcastReceiver mReciever;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,7 +82,19 @@ public class MainActivity extends AppCompatActivity {
             changeToMap();
         }
 
-        S3ClientManager.initAWSClient(this);
+        mReciever = new MyBroadcastReceiver();
+        registerReceiver(mReciever, new IntentFilter(Const.ACTION_RETRIEVE_FINISH));
+
+        // S3ClientManager.initAWSClient(this);
+        startService();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mReciever != null) {
+            unregisterReceiver(mReciever);
+        }
     }
 
     private void changeToMap(){
@@ -101,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         m.clear();
 
         // set left side menu from json assets
-        setupSideMenu(new GalleryData(), nv, R.raw.gallery_data);
+        // setupSideMenu(new GalleryData(), nv, R.raw.gallery_data);
         setupSideMenuFromFile(new GalleryData(), nv, R.raw.gallery_data);
     }
 
@@ -320,4 +339,19 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void startService(){
+        JobScheduler jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        JobInfo info = new JobInfo.Builder(1,new ComponentName(this, S3RetrieveJobService.class))
+                .setMinimumLatency(0)
+                .setOverrideDeadline(5000)
+                .build();
+        jobScheduler.schedule(info);
+    }
+
+    public class MyBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent i) {
+            changeToGallery();
+        }
+    }
 }
