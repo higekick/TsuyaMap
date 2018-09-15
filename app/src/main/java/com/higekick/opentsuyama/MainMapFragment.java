@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -46,6 +48,7 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
 {
 
     GoogleMap gMap;
+    private static final int REQUEST_PERMISSION_LOCATION = 2001;
 
     final LatLng centerOfTsuyama = new LatLng(35.069104, 134.004542);
 
@@ -175,6 +178,11 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             googleMap.setMyLocationEnabled(true);
+        } else {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // RuntimePermissionはMashmallow以上なので
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_PERMISSION_LOCATION);
+            }
         }
 
         googleMap.getUiSettings().setMyLocationButtonEnabled(true);
@@ -187,6 +195,18 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
             loader.execute(selectedMap);
         }
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (requestCode == REQUEST_PERMISSION_LOCATION) {
+                gMap.setMyLocationEnabled(true);
+            }
+        } else {
+            Toast.makeText(getContext(), R.string.message_request_location, Toast.LENGTH_LONG);
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
