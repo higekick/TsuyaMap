@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Context;
@@ -34,6 +35,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static com.higekick.opentsuyama.util.Const.IMG_PRFX;
 
@@ -91,7 +93,7 @@ public class S3RetrieveJobService extends JobService {
         }
         mNotificationBuilder = new NotificationCompat.Builder(this, Const.ID_CHANNEL_DOWNLOAD)
                 .setContentTitle(getResources().getString(R.string.app_name))
-                .setContentText("ダウンロード中...")
+                .setContentText("画像ファイル ダウンロード中...")
                 .setAutoCancel(false)
                 .setSmallIcon(R.drawable.tsuyama_logo_pinkbk);
 
@@ -150,14 +152,20 @@ public class S3RetrieveJobService extends JobService {
 
     private synchronized void observeDownloadAndBroadCastFinish() {
         mNotificationBuilder.setProgress(mSizeOfFile, mIndexOfFile.get(), false);
+        mNotificationBuilder.setContentText("画像ファイル ダウンロード中..." + mIndexOfFile + "/" + mSizeOfFile);
+        mNofificationManager.notify(1, mNotificationBuilder.build());
        if (mIndexOfFile.get() >= mSizeOfFile) {
            Intent intent = new Intent(Const.ACTION_RETRIEVE_FINISH);
            Log.d(TAG, "Download finish and send broadcast");
            sendBroadcast(intent);
+
+           Intent intentMain = new Intent(this,MainActivity.class);
+           PendingIntent pi = PendingIntent.getActivity(this, 0, intentMain, FLAG_UPDATE_CURRENT);
            Notification notification = mNotificationBuilder
                    .setContentTitle(getResources().getString(R.string.app_name))
                    .setContentText("ダウンロード完了")
                    .setSmallIcon(R.drawable.tsuyama_logo_pinkbk)
+                   .setContentIntent(pi)
                    .setAutoCancel(true)
                    .build();
            mNofificationManager.notify(1,notification);
