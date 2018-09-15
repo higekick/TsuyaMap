@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     // button to change contents
     Button btnChangeToMap;
     Button btnChangeToGallery;
+    Button btnChangeToSettings;
 
     MyBroadcastReceiver mReciever;
     @Override
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         if (mReciever != null) {
             unregisterReceiver(mReciever);
+            mReciever = null;
         }
     }
 
@@ -334,6 +336,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 changeToGallery();
+            }
+        });
+
+        btnChangeToSettings = (Button) headerLayout.findViewById(R.id.btnSetting);
+        btnChangeToSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this,SettingsActivity.class);
+                startActivity(i);
             }
         });
 
