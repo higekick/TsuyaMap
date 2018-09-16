@@ -1,6 +1,7 @@
 package com.higekick.opentsuyama;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -9,6 +10,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -19,7 +21,12 @@ import android.preference.RingtonePreference;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
+import android.widget.Toast;
 
+import com.higekick.opentsuyama.util.Const;
+import com.higekick.opentsuyama.util.Util;
+
+import java.io.File;
 import java.util.List;
 
 /**
@@ -184,6 +191,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
+
+            setVisibleOrInvisibleSetting(this, Const.JSON_PRFX);
+
             setHasOptionsMenu(true);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
@@ -217,6 +227,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
 
+            setVisibleOrInvisibleSetting(this, Const.IMG_PRFX);
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
@@ -251,7 +262,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+//            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
         }
 
         @Override
@@ -264,4 +275,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
     }
+
+    private static void setVisibleOrInvisibleSetting(PreferenceFragment fragment, final String prefix) {
+        final Activity activity = fragment.getActivity();
+        String dirPathImage = activity.getFilesDir().getAbsolutePath() + "/" + prefix;
+        File dirFileImage = new File(dirPathImage);
+        String[] dirList = dirFileImage.list();
+
+        for (final String path : dirList) {
+            String title = Util.getDirName(activity, path, prefix);
+            CheckBoxPreference pre = new CheckBoxPreference(activity);
+            pre.setTitle(title);
+            fragment.getPreferenceScreen().addPreference(pre);
+            pre.setChecked(!Util.getInvisibleFile(activity, path, prefix).exists());
+            pre.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    if ((Boolean) newValue) {
+                        Util.deleteInvisibleFile(activity, path, prefix);
+                    } else {
+                        Util.putInvisibleFile(activity, path, prefix);
+                    }
+                    ((CheckBoxPreference) preference).setChecked((Boolean) newValue);
+                    return (Boolean) newValue;
+                }
+            });
+        }
+    }
+
 }

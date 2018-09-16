@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -25,10 +26,6 @@ import android.widget.Button;
 
 import com.higekick.opentsuyama.util.Const;
 import com.higekick.opentsuyama.util.Util;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -90,6 +87,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void changeToMap(){
+        Util.startService(this,Const.JSON_PRFX);
         MainMapFragment mainMapFragment = MainMapFragment.newInstance();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainMapFragment, MainMapFragment.class.getSimpleName()).commit();
 
@@ -99,20 +97,12 @@ public class MainActivity extends AppCompatActivity
         m.clear();
 
         // set left side menu from json assets
-        setupSideMenu(new MapData(), nv, R.raw.map_data);
-    }
-
-    private void startService(){
-        JobScheduler jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        JobInfo info = new JobInfo.Builder(1,new ComponentName(this, S3RetrieveJobService.class))
-                .setMinimumLatency(0)
-                .setOverrideDeadline(5000)
-                .build();
-        jobScheduler.schedule(info);
+        // set left side menu from image file
+        setupSideMenuFromFile(new MapData(), nv);
     }
 
     private void changeToGallery(){
-        startService();
+        Util.startService(this,Const.IMG_PRFX);
         MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
 
@@ -121,31 +111,32 @@ public class MainActivity extends AppCompatActivity
         Menu m = nv.getMenu();
         m.clear();
 
-        // set left side menu from json assets
-        // setupSideMenu(new GalleryData(), nv, R.raw.gallery_data);
-        setupSideMenuFromFile(new GalleryData(), nv, R.raw.gallery_data);
+        // set left side menu from image file
+        setupSideMenuFromFile(new GalleryData(), nv);
     }
 
-    private void setupSideMenuFromFile(final AbstractContentData contentData, NavigationView nv,int idJsonFile){
+    private void setupSideMenuFromFile(final AbstractContentData contentData, NavigationView nv){
         Context con = this;
-        String dirPathImage = con.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX;
+        String dirPathImage;
+
+        // setup menus
+        final HashMap<Integer, AbstractContentData> mapDataHashMap;
+        SubMenu sm;
+        String path;
+        if (contentData instanceof MapData){
+            sm = nv.getMenu().addSubMenu(R.string.menu_section_position);
+            path = Const.JSON_PRFX;
+        } else if (contentData instanceof GalleryData){
+            sm = nv.getMenu().addSubMenu(R.string.menu_section_gallery);
+            path = Const.IMG_PRFX;
+        } else {
+            // nothing to do
+            return;
+        }
+        dirPathImage = con.getFilesDir().getAbsolutePath() + "/" + path;
         File dirFileImage = new File(dirPathImage);
         String[] dirList = dirFileImage.list();
-
-        // setup menus
-        final HashMap<Integer, AbstractContentData> mapDataHashMap;
-        if (contentData instanceof MapData){
-//            mapDataHashMap = setupMapMenuItem(nv,datas,contentData);
-            // Todo inflate data
-            mapDataHashMap = null;
-        } else if (contentData instanceof GalleryData){
-            SubMenu sm = nv.getMenu().addSubMenu(R.string.menu_section_gallery);
-//            mapDataHashMap = setupGalleryMenuItem(sm,datas,contentData);
-            mapDataHashMap = setupGalleryMenuItemFromFile(sm,dirList,contentData);
-        } else {
-            // nothing to do
-            return;
-        }
+        mapDataHashMap = setupMenuItemFromFile(sm,dirList,contentData,path);
 
         // left side menu select action
         nv.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -168,129 +159,49 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void setupSideMenu(final AbstractContentData contentData, NavigationView nv,int idJsonFile){
-        JSONArray datas = null;
-        try {
-            datas = new JSONArray(Util.getJsonFromRawFile(idJsonFile, MainActivity.this));
-        } catch (JSONException ex) {
-            Log.d("MainActivity", "unhandled JsonException.", ex);
-        }
-
-        // setup menus
-        final HashMap<Integer, AbstractContentData> mapDataHashMap;
-        if (contentData instanceof MapData){
-            mapDataHashMap = setupMapMenuItem(nv,datas,contentData);
-        } else if (contentData instanceof GalleryData){
-            SubMenu sm = nv.getMenu().addSubMenu(R.string.menu_section_gallery);
-            mapDataHashMap = setupGalleryMenuItem(sm,datas,contentData);
-//            mapDataHashMap = setupGalleryMenuItemFromFile(sm,datas,contentData);
-        } else {
-            // nothing to do
-            return;
-        }
-
-        // left side menu select action
-        nv.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int id = item.getItemId();
-                AbstractContentData data = mapDataHashMap.get(id);
-
-                IMainFragmentExecuter fragment = (IMainFragmentExecuter) getSupportFragmentManager().findFragmentByTag(contentData.getFragmentClassName());
-                if (fragment != null) {
-                    fragment.executeLoading(data);
-                }
-
-                setTitle(data.name);
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-                drawer.closeDrawer(GravityCompat.START);
-
-                return false;
-            }
-        });
-    }
-
-    private HashMap<Integer, AbstractContentData> setupMapMenuItem(NavigationView nv, JSONArray datas, final AbstractContentData contentData){
-        Menu m = nv.getMenu();
+    private HashMap<Integer, AbstractContentData> setupMenuItemFromFile(SubMenu sm,
+                                                                        String[] dirs,
+                                                                        final AbstractContentData contentData,
+                                                                        final String path) {
         final HashMap<Integer, AbstractContentData> mapDataHashMap = new HashMap<>();
 
-        for (int i = 0; i <= datas.length() - 1; i++) {
-            try {
-                JSONObject section = datas.getJSONObject(i);
-                SubMenu sm = m.addSubMenu(section.getString("section_name"));
-                JSONArray places = section.getJSONArray("places");
-                for (int j = 0; j <= places.length() - 1; j++) {
-                    AbstractContentData data = contentData.newInstance();
-                    data.importFromJson(places.getJSONObject(j));
-                    int resIconId = getResources().getIdentifier(data.icon, "drawable", this.getPackageName());
-                    int itemId = i*10 + j;
-                    sm.add(0, itemId, itemId, data.name).setIcon(resIconId);
-                    mapDataHashMap.put(itemId, data);
+        if (dirs != null) {
+            for (int i = 0; i <= dirs.length - 1; i++) {
+                if (Util.getInvisibleFile(this, dirs[i], path).exists()) {
+                    // if setting invisible by setting menu, do not show.
+                    continue;
                 }
-            } catch (JSONException ex) {
-                Log.d("MainActivity", "unhandled JsonException.", ex);
-            }
-        }
-       return mapDataHashMap;
-    }
-
-    private HashMap<Integer, AbstractContentData> setupGalleryMenuItemFromFile(SubMenu sm, String[] dirs, final AbstractContentData contentData) {
-        final HashMap<Integer, AbstractContentData> mapDataHashMap = new HashMap<>();
-
-        for (int i = 0; i <= dirs.length - 1; i++) {
-            AbstractContentData data = contentData.newInstance();
-            data.importFromFile(this, dirs[i]);
-            int resIconId = getResources().getIdentifier("ic_menu_camera", "drawable", this.getPackageName());
-//                int picNum = ((GalleryData) data).picUrls.size();
-            int picNum = 10;
-            sm.add(0, i, i, getDirName(dirs[i]) + " (" + picNum + ")").setIcon(resIconId);
-            mapDataHashMap.put(i, data);
-        }
-        return mapDataHashMap;
-    }
-
-    private String getDirName(String dirId){
-        String pathDir = this.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX + "/" + dirId + "/" + "dirname.txt";
-        File f = new File(pathDir);
-        if (f.exists()) {
-
-            Uri uri = Uri.fromFile(f);
-            InputStream stream;
-            try {
-                stream = this.getContentResolver().openInputStream(uri);
-                InputStreamReader inputStreamReader = new InputStreamReader(stream);
-                BufferedReader bufferReader = new BufferedReader(inputStreamReader);
-                String line;
-                while ((line = bufferReader.readLine()) != null) {
-                    return line;
-                }
-            } catch (FileNotFoundException ex) {
-                Log.e("LoadingImage", "failed to load image.", ex);
-                return null;
-            } catch (IOException ex) {
-                Log.e("LoadingImage", "failed to load image.", ex);
-                return null;
-            }
-        }
-        return "";
-    }
-
-    private HashMap<Integer, AbstractContentData> setupGalleryMenuItem(SubMenu sm, JSONArray datas, final AbstractContentData contentData) {
-        final HashMap<Integer, AbstractContentData> mapDataHashMap = new HashMap<>();
-
-        for (int i = 0; i <= datas.length() - 1; i++) {
-            try {
                 AbstractContentData data = contentData.newInstance();
-                data.importFromJson(datas.getJSONObject(i));
-                int resIconId = getResources().getIdentifier(data.icon, "drawable", this.getPackageName());
-                int picNum = ((GalleryData) data).picUrls.size();
-                sm.add(0, i, i, data.name + " (" + picNum + ")").setIcon(resIconId);
+                String dirName = Util.getDirName(this, dirs[i], path);
+                data.importFromFile(this, dirName, dirs[i]);
+                int resIconId = getResources().getIdentifier("ic_menu_camera", "drawable", this.getPackageName());
+                int picNum = getFileCount(dirs[i], path);
+                sm.add(0, i, i, dirName + " (" + picNum + ")").setIcon(resIconId);
                 mapDataHashMap.put(i, data);
-            } catch (JSONException ex) {
-                Log.d("MainActivity", "unhandled JsonException.", ex);
             }
         }
         return mapDataHashMap;
+    }
+
+    private int getFileCount(String dirId, String path) {
+        String pathDir = this.getFilesDir().getAbsolutePath() + "/" + path + "/" + dirId;
+        File f = new File(pathDir);
+        if (f == null) {
+            return 0;
+        }
+        File[] list = f.listFiles();
+        int count = 0;
+        if (list == null) {
+            return 0;
+        }
+        for (File f2 : list) {
+            if (f2.isFile() &&
+                    ( f2.getName().endsWith(".jpg") || f2.getName().endsWith(".json") )
+                    ){
+               count++;
+            }
+        }
+        return count;
     }
 
     @Override

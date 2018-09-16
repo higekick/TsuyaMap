@@ -188,7 +188,7 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
         googleMap.getUiSettings().setMyLocationButtonEnabled(true);
         googleMap.getUiSettings().setMapToolbarEnabled(false);
 
-        if (selectedMap == null || TextUtils.isEmpty(selectedMap.url)) {
+        if (selectedMap == null || TextUtils.isEmpty(selectedMap.id)) {
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centerOfTsuyama, 10));
         } else {
             FileDownLoader loader = new FileDownLoader(googleMap, getContext(), this);
@@ -248,7 +248,7 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
     }
 
     private String convertStringLatAt(@NonNull LocationData data){
-        return Double.toString(selectedLocationData.getLocationY()) + ", " + Double.toString(selectedLocationData.getLocationX());
+        return Double.toString(selectedLocationData.getAlt()) + ", " + Double.toString(selectedLocationData.getLon());
     }
 
     /**

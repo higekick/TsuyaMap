@@ -37,27 +37,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static com.higekick.opentsuyama.util.Const.IMG_PRFX;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class S3RetrieveJobService extends JobService {
     public final static String TAG = S3RetrieveJobService.class.getSimpleName();
     public static final String BUCKET_NAME = "tsuyama-open";
 
+    // params
+    public final static String EXTRAS_S3_PATH = "S3_PATH";
+
+    // background worker
     HandlerThread mHandlerThread;
     Handler mHandler;
 
+    // notification for download
     NotificationManager mNofificationManager;
     NotificationCompat.Builder mNotificationBuilder;
 
     private Integer mSizeOfFile;
     private AtomicInteger mIndexOfFile;
+    private String mS3Path; // json or jpg
 
     @Override
     public boolean onStartJob(JobParameters params) {
         mHandlerThread = new HandlerThread("S3RetrieveJobThread", THREAD_PRIORITY_BACKGROUND);
         mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
+
+        mS3Path = params.getExtras().getString(EXTRAS_S3_PATH);
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -76,8 +83,8 @@ public class S3RetrieveJobService extends JobService {
     }
 
     private void execute(){
+        // AWS mobile client initialize
         AWSMobileClient.getInstance().initialize(this).execute();
-
         AWSCredentialsProvider provider = AWSMobileClient.getInstance().getCredentialsProvider();
         AmazonS3Client s3Client = new AmazonS3Client(provider);
         TransferUtility transferUtility =
@@ -87,13 +94,14 @@ public class S3RetrieveJobService extends JobService {
                         .s3Client(s3Client)
                         .build();
 
+        // create notification channel for above oreo
         mNofificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannel();
         }
         mNotificationBuilder = new NotificationCompat.Builder(this, Const.ID_CHANNEL_DOWNLOAD)
                 .setContentTitle(getResources().getString(R.string.app_name))
-                .setContentText("画像ファイル ダウンロード中...")
+                .setContentText("ダウンロード中...")
                 .setAutoCancel(false)
                 .setSmallIcon(R.drawable.tsuyama_logo_pinkbk);
 
@@ -102,7 +110,7 @@ public class S3RetrieveJobService extends JobService {
 
     private void retrieveImage(AmazonS3Client c, TransferUtility t, Context con){
         // create parent img directory
-        File imgDir = new File(con.getFilesDir().getAbsolutePath() + "/" + IMG_PRFX);
+        File imgDir = new File(con.getFilesDir().getAbsolutePath() + "/" + mS3Path);
         if (imgDir.exists()) {
             imgDir.delete();
             Log.d(TAG, "img directory deleted;");
@@ -112,7 +120,7 @@ public class S3RetrieveJobService extends JobService {
         }
 
         // download from S3
-        ObjectListing list = c.listObjects(BUCKET_NAME, IMG_PRFX);
+        ObjectListing list = c.listObjects(BUCKET_NAME, mS3Path);
         List<S3ObjectSummary> obsmry = list.getObjectSummaries();
         URLCodec codec = new URLCodec("UTF-8");
 
@@ -141,7 +149,7 @@ public class S3RetrieveJobService extends JobService {
             }
             try {
 //                S3Object obj = c.getObject(s.getBucketName(), encodedResult);
-                String savePath = con.getFilesDir().getAbsolutePath() + "/" + IMG_PRFX + "/" + dirName + "/" + fileName;
+                String savePath = con.getFilesDir().getAbsolutePath() + "/" + mS3Path + "/" + dirName + "/" + fileName;
                 Log.d(TAG, savePath);
                 downloadFileFromS3(t, key, savePath);
             } catch (AmazonS3Exception ex) {
@@ -152,7 +160,7 @@ public class S3RetrieveJobService extends JobService {
 
     private synchronized void observeDownloadAndBroadCastFinish() {
         mNotificationBuilder.setProgress(mSizeOfFile, mIndexOfFile.get(), false);
-        mNotificationBuilder.setContentText("画像ファイル ダウンロード中..." + mIndexOfFile + "/" + mSizeOfFile);
+        mNotificationBuilder.setContentText("ダウンロード中..." + mIndexOfFile + "/" + mSizeOfFile);
         mNofificationManager.notify(1, mNotificationBuilder.build());
        if (mIndexOfFile.get() >= mSizeOfFile) {
            Intent intent = new Intent(Const.ACTION_RETRIEVE_FINISH);
@@ -209,14 +217,14 @@ public class S3RetrieveJobService extends JobService {
         });
     }
 
-    private static String makeDir(String key, Context con){
+    private String makeDir(String key, Context con){
         String[] split = key.split("/");
         if (split.length != 3) {
             // こんな形式なので
             // jpg/津山市_ごんごまつり花火_画像/tsuyamashigongomatsurihanabigazou720170203touroku.jpg
             return null;
         }
-        String dirName=con.getFilesDir().getAbsolutePath() + "/" + IMG_PRFX + "/"+ split[1];
+        String dirName=con.getFilesDir().getAbsolutePath() + "/" + mS3Path + "/"+ split[1];
         File dir = new File(dirName);
         if (!dir.exists()) {
             boolean r = dir.mkdir();

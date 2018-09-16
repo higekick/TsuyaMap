@@ -1,6 +1,9 @@
 package com.higekick.opentsuyama.util;
 
 import android.app.Application;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -10,14 +13,20 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.PersistableBundle;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import com.higekick.opentsuyama.R;
+import com.higekick.opentsuyama.S3RetrieveJobService;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,8 +53,8 @@ public class Util {
         return url;
     }
 
-    public static String getJsonFromRawFile(int resId, Context con) {
-        InputStream is = con.getResources().openRawResource(resId);
+    public static JSONArray getJsonFromFile(File file, Context con) throws FileNotFoundException, JSONException {
+        InputStream is = new FileInputStream(file);
         Writer w = new StringWriter();
         try{
             BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
@@ -64,7 +73,7 @@ public class Util {
             }
         }
 
-        return w.toString();
+        return new JSONArray(w.toString());
     }
 
     // ネットワーク接続確認
@@ -146,4 +155,80 @@ public class Util {
         return bitmap;
     }
 
+    public static String getJsonDirPath(Context con) {
+        return con.getFilesDir().getAbsolutePath() + "/" + Const.JSON_PRFX;
+    }
+
+    public static String getImageDirPath(Context con) {
+        return con.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX;
+    }
+
+    public static String getDirName(Context context, String dirId, String path){
+        String pathDir = context.getFilesDir().getAbsolutePath() + "/" + path + "/" + dirId + "/" + "dirname.txt";
+        File f = new File(pathDir);
+        if (f.exists()) {
+
+            Uri uri = Uri.fromFile(f);
+            InputStream stream;
+            try {
+                stream = context.getContentResolver().openInputStream(uri);
+                InputStreamReader inputStreamReader = new InputStreamReader(stream);
+                BufferedReader bufferReader = new BufferedReader(inputStreamReader);
+                String line;
+                while ((line = bufferReader.readLine()) != null) {
+                    return line;
+                }
+            } catch (FileNotFoundException ex) {
+                Log.e("LoadingImage", "failed to load image.", ex);
+                return null;
+            } catch (IOException ex) {
+                Log.e("LoadingImage", "failed to load image.", ex);
+                return null;
+            }
+        }
+        return "";
+    }
+
+    public static void putInvisibleFile(Context context, String dirId, String path) {
+       processInvisibleFile(context, dirId, path, true);
+    }
+
+    public static void deleteInvisibleFile(Context context, String dirId, String path) {
+        processInvisibleFile(context, dirId, path, false);
+    }
+
+    public static void processInvisibleFile(Context context, String dirId, String path, boolean isMake) {
+        File f = getInvisibleFile(context, dirId, path);
+        try {
+            if (isMake) {
+                f.createNewFile();
+            } else {
+                if (f.exists()) {
+                    f.delete();
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            Log.e("LoadingImage", "failed to load image.", ex);
+        } catch (IOException ex) {
+            Log.e("LoadingImage", "failed to load image.", ex);
+        }
+    }
+
+    public static File getInvisibleFile(Context context, String dirId, String path) {
+        String pathDir = context.getFilesDir().getAbsolutePath() + "/" + path + "/" + dirId + "/" + "invisible";
+        File f = new File(pathDir);
+        return f;
+    }
+
+    public static void startService(Context context, String s3Path){
+        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        PersistableBundle bundle = new PersistableBundle();
+        bundle.putString(S3RetrieveJobService.EXTRAS_S3_PATH, s3Path);
+        JobInfo info = new JobInfo.Builder(1,new ComponentName(context, S3RetrieveJobService.class))
+                .setMinimumLatency(0) // 0～5秒の間に動かす
+                .setOverrideDeadline(5000)
+                .setExtras(bundle) // JobParamsセット
+                .build();
+        jobScheduler.schedule(info);
+    }
 }

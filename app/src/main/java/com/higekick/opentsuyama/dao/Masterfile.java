@@ -14,7 +14,7 @@ public class Masterfile extends RealmObject {
     private int id;
     private String name;
     private Date fileDate;
-    private RealmList<LocationData> locations;
+//    private RealmList<LocationData> locations;
 
     public int getId() {
         return id;
@@ -40,11 +40,11 @@ public class Masterfile extends RealmObject {
         this.fileDate = fileDate;
     }
 
-    public RealmList<LocationData> getLocations() {
-        return locations;
-    }
-
-    public void setLocations(RealmList<LocationData> locations) {
-        this.locations = locations;
-    }
+//    public RealmList<LocationData> getLocations() {
+//        return locations;
+//    }
+//
+//    public void setLocations(RealmList<LocationData> locations) {
+//        this.locations = locations;
+//    }
 }

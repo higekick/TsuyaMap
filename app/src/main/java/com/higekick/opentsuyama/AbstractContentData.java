@@ -34,9 +34,9 @@ public abstract class AbstractContentData {
 
     public abstract String getFragmentClassName();
 
-    public void importFromFile(Context context, String dir){
-        this.id = dir;
-        this.name = dir;
+    public void importFromFile(Context context, String dirName, String path){
+        this.id = path;
+        this.name = dirName;
     };
 
 }

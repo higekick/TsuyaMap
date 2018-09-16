@@ -47,11 +47,14 @@ public class GalleryData extends AbstractContentData {
     }
 
     @Override
-    public void importFromFile(Context con, String dir) {
-        super.importFromFile(con, dir);
-        String pathDir = con.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX + "/" + dir;
+    public void importFromFile(Context con, String dir, String path) {
+        super.importFromFile(con, dir, path);
+        String pathDir = con.getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX + "/" + path;
         File fileDir = new File(pathDir);
         String[] files = fileDir.list();
+        if (files == null) {
+            return;
+        }
         this.picUrls = new ArrayList<>();
         for(String file : files) {
             if (!file.equals("dirname.txt")) {
