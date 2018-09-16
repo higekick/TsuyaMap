@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -24,15 +23,6 @@ import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.higekick.opentsuyama.aws.S3ClientManager;
 import com.higekick.opentsuyama.util.Const;
 import com.higekick.opentsuyama.util.Util;
 
@@ -46,13 +36,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.List;
 
-import com.amazonaws.mobile.client.AWSMobileClient;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements EntranceFragment.OnOpenDrawerListener{
 
     // button to change contents
     Button btnChangeToMap;
@@ -80,23 +67,26 @@ public class MainActivity extends AppCompatActivity {
             if (savedInstanceState != null) {
                 return;
             }
-            changeToMap();
+            changeToEntrance();
         }
 
         mReciever = new MyBroadcastReceiver();
         registerReceiver(mReciever, new IntentFilter(Const.ACTION_RETRIEVE_FINISH));
-
-        // S3ClientManager.initAWSClient(this);
-        startService();
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onDestroy() {
+        super.onDestroy();
         if (mReciever != null) {
             unregisterReceiver(mReciever);
             mReciever = null;
         }
+    }
+
+    private void changeToEntrance() {
+        EntranceFragment fragment = EntranceFragment.newInstance();
+        fragment.setOpenListener(this);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, EntranceFragment.class.getSimpleName()).commit();
     }
 
     private void changeToMap(){
@@ -112,7 +102,17 @@ public class MainActivity extends AppCompatActivity {
         setupSideMenu(new MapData(), nv, R.raw.map_data);
     }
 
+    private void startService(){
+        JobScheduler jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        JobInfo info = new JobInfo.Builder(1,new ComponentName(this, S3RetrieveJobService.class))
+                .setMinimumLatency(0)
+                .setOverrideDeadline(5000)
+                .build();
+        jobScheduler.schedule(info);
+    }
+
     private void changeToGallery(){
+        startService();
         MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
 
@@ -350,19 +350,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void startService(){
-        JobScheduler jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        JobInfo info = new JobInfo.Builder(1,new ComponentName(this, S3RetrieveJobService.class))
-                .setMinimumLatency(0)
-                .setOverrideDeadline(5000)
-                .build();
-        jobScheduler.schedule(info);
+    @Override
+    public void onExecuteGalleryOpen() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.openDrawer(GravityCompat.START);
+        changeToGallery();
+    }
+
+    @Override
+    public void onExecuteMapOpen() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.openDrawer(GravityCompat.START);
+        changeToMap();
     }
 
     public class MyBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent i) {
-            changeToGallery();
+            // changeToGallery();
         }
     }
 }
