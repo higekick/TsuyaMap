@@ -40,7 +40,7 @@
     <string name="nav_button_map">"津山の場所"</string>
     <string name="nav_button_gallery">"津山の風景"</string>
     <string name="nav_button_setting">"設定"</string>
-    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_settings">"設定"</string>
 
     <string name="message_request_location">"現在地をマップに表示するにはリクエストを許可してください"</string>
 
@@ -123,5 +123,21 @@
     <string name="cancel">Cancel</string>
     <string name="title_json_download">場所データを再ダウンロード</string>
     <string name="title_image_download">風景写真を再ダウンロード</string>
+
+    <string name="pref_header_about_opend_data">"津山市オープンデータ"</string>
+    <string name="pref_header_summary_opend_data">"津山市オープンデータへのリンクです"</string>
+    <string name="url_open_data">"https://www.city.tsuyama.lg.jp/life/index2.php?id=5530"</string>
+
+    <string name="header_terms_of_use">"利用規約"</string>
+
+    <string name="btn_intro_next">"次へ"</string>
+    <string name="btn_intro_back">戻る</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="chk_terms_of_use">理解</string>
+    <string name="title_now_download">ダウンロード中</string>
+    <string name="message_pleasewait">お待ちください</string>
+    <string name="message_no_network">ネットワーク接続を確認してください。</string>
 
 </resources>

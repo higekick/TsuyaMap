@@ -21,7 +21,6 @@ import android.preference.RingtonePreference;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
-import android.widget.Toast;
 
 import com.higekick.opentsuyama.util.Const;
 import com.higekick.opentsuyama.util.Util;
@@ -168,6 +167,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
         loadHeadersFromResource(R.xml.pref_headers, target);
+
+        // set link to open data
+        for(Header h: target) {
+            if(h.id == R.id.header_link_open_data) {
+                Uri uri = Uri.parse(getResources().getString(R.string.url_open_data));
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                h.intent = intent;
+            }
+            if (h.id == R.id.header_terms_of_use) {
+                Intent intent = new Intent(this, IntroductionActivity.class);
+                intent.setAction(Const.ACTION_TERMS_FROM_SETTINGS);
+                h.intent = intent;
+            }
+        }
     }
 
     /**
@@ -178,7 +191,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
-                || NotificationPreferenceFragment.class.getName().equals(fragmentName);
+                || NotificationPreferenceFragment.class.getName().equals(fragmentName)
+                || TermsOfUseFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -200,8 +214,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("example_list"));
+//            bindPreferenceSummaryToValue(findPreference("example_text"));
+//            bindPreferenceSummaryToValue(findPreference("example_list"));
         }
 
         @Override
@@ -232,7 +246,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+//            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
         }
 
         @Override
@@ -282,6 +296,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         File dirFileImage = new File(dirPathImage);
         String[] dirList = dirFileImage.list();
 
+        activity.setResult(RESULT_CANCELED);
+
         for (final String path : dirList) {
             String title = Util.getDirName(activity, path, prefix);
             CheckBoxPreference pre = new CheckBoxPreference(activity);
@@ -291,6 +307,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             pre.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    activity.setResult(RESULT_OK);
                     if ((Boolean) newValue) {
                         Util.deleteInvisibleFile(activity, path, prefix);
                     } else {

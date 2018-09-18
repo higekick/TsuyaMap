@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.higekick.opentsuyama.util.Const;
+import com.higekick.opentsuyama.util.ProgressDialogCustome;
 import com.higekick.opentsuyama.util.Util;
 
 public class DownloadPreference extends DialogPreference {
@@ -29,10 +30,24 @@ public class DownloadPreference extends DialogPreference {
         if (positiveResult) {
             Resources res = this.getContext().getResources();
             if (getKey().equals(res.getString(R.string.title_json_download))) {
+                if (!Util.netWorkCheck(getContext())) {
+                    return;
+                }
+                showDialog();
                 Util.startService(this.getContext(), Const.JSON_PRFX);
             } else if (getKey().equals(res.getString(R.string.title_image_download))) {
+                if (!Util.netWorkCheck(getContext())) {
+                    return;
+                }
+                showDialog();
                 Util.startService(this.getContext(), Const.IMG_PRFX);
             }
         }
+    }
+
+    private void showDialog(){
+        ProgressDialogCustome dialog = new ProgressDialogCustome(getContext());
+        dialog.setup();
+        dialog.show();
     }
 }

@@ -10,6 +10,7 @@ import android.app.job.JobService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.app.NotificationCompat;
@@ -26,6 +27,7 @@ import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.higekick.opentsuyama.util.Const;
+import com.higekick.opentsuyama.util.Util;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
@@ -58,8 +60,15 @@ public class S3RetrieveJobService extends JobService {
     private AtomicInteger mIndexOfFile;
     private String mS3Path; // json or jpg
 
+    static boolean isRunning = false;
+
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (isRunning) {
+            return false;
+        } else {
+            isRunning = true;
+        }
         mHandlerThread = new HandlerThread("S3RetrieveJobThread", THREAD_PRIORITY_BACKGROUND);
         mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
@@ -79,6 +88,7 @@ public class S3RetrieveJobService extends JobService {
         if (mHandlerThread!=null) {
             mHandlerThread.quit();
         }
+        isRunning = false;
         return false;
     }
 
@@ -126,6 +136,7 @@ public class S3RetrieveJobService extends JobService {
 
         mIndexOfFile = new AtomicInteger(0);
         mSizeOfFile = obsmry.size();
+        sendBroadcastMax();
         mNotificationBuilder.setProgress(mSizeOfFile, 0, false);
         mNofificationManager.notify(1, mNotificationBuilder.build());
 
@@ -162,10 +173,15 @@ public class S3RetrieveJobService extends JobService {
         mNotificationBuilder.setProgress(mSizeOfFile, mIndexOfFile.get(), false);
         mNotificationBuilder.setContentText("ダウンロード中..." + mIndexOfFile + "/" + mSizeOfFile);
         mNofificationManager.notify(1, mNotificationBuilder.build());
+        sendBroadcastProgress();
        if (mIndexOfFile.get() >= mSizeOfFile) {
            Intent intent = new Intent(Const.ACTION_RETRIEVE_FINISH);
            Log.d(TAG, "Download finish and send broadcast");
            sendBroadcast(intent);
+           sendBroadcastFinish();
+
+           isRunning = false;
+           Util.setPreferenceValue(this, Const.KEY_DOWNLOAD_X + mS3Path, true);
 
            Intent intentMain = new Intent(this,MainActivity.class);
            PendingIntent pi = PendingIntent.getActivity(this, 0, intentMain, FLAG_UPDATE_CURRENT);
@@ -178,6 +194,30 @@ public class S3RetrieveJobService extends JobService {
                    .build();
            mNofificationManager.notify(1,notification);
        }
+    }
+
+    private void sendBroadcastProgress(){
+        Intent i = new Intent(Const.ACTION_RETRIEVE_PROGRESS);
+        Bundle bundle = new Bundle();
+        bundle.putInt("progress", mIndexOfFile.get());
+        i.putExtras(bundle);
+        sendBroadcast(i);
+    }
+
+    private void sendBroadcastMax(){
+        Intent i = new Intent(Const.ACTION_RETRIEVE_PROGRESS);
+        Bundle bundle = new Bundle();
+        bundle.putInt("max", mSizeOfFile);
+        i.putExtras(bundle);
+        sendBroadcast(i);
+    }
+
+    private void sendBroadcastFinish(){
+        Intent i = new Intent(Const.ACTION_RETRIEVE_PROGRESS);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("finish", true);
+        i.putExtras(bundle);
+        sendBroadcast(i);
     }
 
     public void downloadFileFromS3(TransferUtility t, String key, String path){

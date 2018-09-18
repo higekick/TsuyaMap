@@ -1,23 +1,19 @@
 package com.higekick.opentsuyama;
 
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -25,18 +21,15 @@ import android.view.View;
 import android.widget.Button;
 
 import com.higekick.opentsuyama.util.Const;
+import com.higekick.opentsuyama.util.ProgressDialogCustome;
 import com.higekick.opentsuyama.util.Util;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity
-        implements EntranceFragment.OnOpenDrawerListener{
+        implements EntranceFragment.OnOpenDrawerListener,ProgressDialogCustome.OnDownloadFinishListener{
+    public static int REQUEST_CODE_SETTING = 1001;
 
     // button to change contents
     Button btnChangeToMap;
@@ -44,6 +37,7 @@ public class MainActivity extends AppCompatActivity
     Button btnChangeToSettings;
 
     MyBroadcastReceiver mReciever;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,11 +58,33 @@ public class MainActivity extends AppCompatActivity
             if (savedInstanceState != null) {
                 return;
             }
-            changeToEntrance();
+            reload();
         }
 
         mReciever = new MyBroadcastReceiver();
         registerReceiver(mReciever, new IntentFilter(Const.ACTION_RETRIEVE_FINISH));
+    }
+
+    private void reload() {
+        int currentUse = Util.getIntPreferenceValue(this, Const.KEY_CURRENT_USE);
+        if (currentUse == Const.CURRENT_USE_IMAGE) {
+            changeToGallery();
+        } else if (currentUse == Const.CURRENT_USE_MAP) {
+            changeToMap();
+        } else {
+            Intent intent = new Intent(this, IntroductionActivity.class);
+            startActivity(intent);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_SETTING) {
+            if (resultCode == RESULT_OK) {
+                reload();
+            }
+        }
     }
 
     @Override
@@ -80,42 +96,47 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void changeToEntrance() {
-        EntranceFragment fragment = EntranceFragment.newInstance();
-        fragment.setOpenListener(this);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, EntranceFragment.class.getSimpleName()).commit();
-    }
-
     private void changeToMap(){
-        Util.startService(this,Const.JSON_PRFX);
+        tryDownload(Const.JSON_PRFX);
+
         MainMapFragment mainMapFragment = MainMapFragment.newInstance();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainMapFragment, MainMapFragment.class.getSimpleName()).commit();
 
-        NavigationView nv = (NavigationView) findViewById(R.id.nav_view);
-
-        Menu m = nv.getMenu();
-        m.clear();
-
         // set left side menu from json assets
         // set left side menu from image file
-        setupSideMenuFromFile(new MapData(), nv);
+        setupSideMenuFromFile(new MapData());
     }
 
     private void changeToGallery(){
-        Util.startService(this,Const.IMG_PRFX);
+        tryDownload(Const.IMG_PRFX);
+
         MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
 
-        NavigationView nv = (NavigationView) findViewById(R.id.nav_view);
+        // set left side menu from image file
+        setupSideMenuFromFile(new GalleryData());
+    }
 
+    private void tryDownload(String prfx) {
+        if (Util.getBooleanPreferenceValue(this, Const.KEY_DOWNLOAD_X + prfx)) {
+            // すでにダウンロードしている
+            return;
+        }
+        if (!Util.netWorkCheck(this)) {
+            // ダウンロード必要だが、ネットワーク接続がない
+            return;
+        }
+        DownloadFragment fragment = new DownloadFragment();
+        fragment.show(getSupportFragmentManager(), "tag");
+        fragment.setOnDownloadFinishListener(this);
+        Util.startService(this, prfx);
+    }
+
+    private void setupSideMenuFromFile(final AbstractContentData contentData){
+        NavigationView nv = findViewById(R.id.nav_view);
         Menu m = nv.getMenu();
         m.clear();
 
-        // set left side menu from image file
-        setupSideMenuFromFile(new GalleryData(), nv);
-    }
-
-    private void setupSideMenuFromFile(final AbstractContentData contentData, NavigationView nv){
         Context con = this;
         String dirPathImage;
 
@@ -224,9 +245,9 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -240,12 +261,14 @@ public class MainActivity extends AppCompatActivity
         btnChangeToMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_MAP);
                 changeToMap();
             }
         });
         btnChangeToGallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_IMAGE);
                 changeToGallery();
             }
         });
@@ -255,30 +278,47 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(MainActivity.this,SettingsActivity.class);
-                startActivity(i);
+                startActivityForResult(i, REQUEST_CODE_SETTING);
             }
         });
-
     }
 
     @Override
     public void onExecuteGalleryOpen() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.openDrawer(GravityCompat.START);
+        openDrawer();
         changeToGallery();
     }
 
     @Override
     public void onExecuteMapOpen() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.openDrawer(GravityCompat.START);
+        openDrawer();
         changeToMap();
+    }
+
+    private void openDrawer() {
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.openDrawer(GravityCompat.START);
+    }
+
+    @Override
+    public void onDownloadFinish() {
+        openDrawer();
     }
 
     public class MyBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent i) {
             // changeToGallery();
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode != KeyEvent.KEYCODE_BACK) {
+            return super.onKeyDown(keyCode, event);
+        } else {
+            openDrawer();
+            return false;
         }
     }
 }

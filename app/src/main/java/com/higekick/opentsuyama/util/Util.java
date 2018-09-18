@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
@@ -16,7 +17,9 @@ import android.os.Environment;
 import android.os.PersistableBundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.higekick.opentsuyama.DownloadFragment;
 import com.higekick.opentsuyama.R;
 import com.higekick.opentsuyama.S3RetrieveJobService;
 
@@ -80,9 +83,16 @@ public class Util {
     public static boolean netWorkCheck(Context context){
         ConnectivityManager cm =  (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = cm.getActiveNetworkInfo();
+        boolean result = false;
         if( info != null ){
-            return info.isConnected();
+            result = info.isConnected();
         } else {
+            result = false;
+        }
+        if (result) {
+            return true;
+        } else {
+            Toast.makeText(context, context.getResources().getText(R.string.message_no_network),Toast.LENGTH_LONG).show();
             return false;
         }
     }
@@ -230,5 +240,27 @@ public class Util {
                 .setExtras(bundle) // JobParamsセット
                 .build();
         jobScheduler.schedule(info);
+    }
+
+    public static void setPreferenceValue(Context context, String key, Object value){
+        SharedPreferences data = context.getSharedPreferences(Const.NAME_PREFERRENCE_FILE,Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = data.edit();
+        if (value instanceof Integer) {
+            editor.putInt(key, (Integer)value);
+        }
+        else if (value instanceof Boolean) {
+            editor.putBoolean(key, (Boolean)value);
+        }
+        editor.apply();
+    }
+
+    public static int getIntPreferenceValue(Context context, String key){
+        SharedPreferences data = context.getSharedPreferences(Const.NAME_PREFERRENCE_FILE,Context.MODE_PRIVATE);
+        return data.getInt(key, 0);
+    }
+
+    public static boolean getBooleanPreferenceValue(Context context, String key){
+        SharedPreferences data = context.getSharedPreferences(Const.NAME_PREFERRENCE_FILE,Context.MODE_PRIVATE);
+        return data.getBoolean(key, false);
     }
 }
