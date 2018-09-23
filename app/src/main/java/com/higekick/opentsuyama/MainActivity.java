@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
@@ -28,7 +30,9 @@ import java.io.File;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity
-        implements EntranceFragment.OnOpenDrawerListener,ProgressDialogCustome.OnDownloadFinishListener{
+        implements EntranceFragment.OnOpenDrawerListener
+        ,ProgressDialogCustome.OnDownloadFinishListener
+        ,MainGalleryFragment.OnFragmentInteractionListener {
     public static int REQUEST_CODE_SETTING = 1001;
 
     // button to change contents
@@ -195,34 +199,24 @@ public class MainActivity extends AppCompatActivity
                 AbstractContentData data = contentData.newInstance();
                 String dirName = Util.getDirName(this, dirs[i], path);
                 data.importFromFile(this, dirName, dirs[i]);
-                int resIconId = getResources().getIdentifier("ic_menu_camera", "drawable", this.getPackageName());
-                int picNum = getFileCount(dirs[i], path);
-                sm.add(0, i, i, dirName + " (" + picNum + ")").setIcon(resIconId);
+                int resIconId;
+                String itemName;
+                int picNum = Util.getFileCount(this, dirs[i], path);
+                if (picNum == 0) {
+                    continue;
+                }
+                if (path.equals(Const.JSON_PRFX)) {
+                    resIconId = getResources().getIdentifier("ic_menu_gallery", "drawable", this.getPackageName());
+                    itemName = dirName;
+                } else {
+                    resIconId = getResources().getIdentifier("ic_menu_camera", "drawable", this.getPackageName());
+                    itemName = dirName + " (" + picNum + ")";
+                }
+                sm.add(0, i, i, itemName).setIcon(resIconId);
                 mapDataHashMap.put(i, data);
             }
         }
         return mapDataHashMap;
-    }
-
-    private int getFileCount(String dirId, String path) {
-        String pathDir = this.getFilesDir().getAbsolutePath() + "/" + path + "/" + dirId;
-        File f = new File(pathDir);
-        if (f == null) {
-            return 0;
-        }
-        File[] list = f.listFiles();
-        int count = 0;
-        if (list == null) {
-            return 0;
-        }
-        for (File f2 : list) {
-            if (f2.isFile() &&
-                    ( f2.getName().endsWith(".jpg") || f2.getName().endsWith(".json") )
-                    ){
-               count++;
-            }
-        }
-        return count;
     }
 
     @Override
@@ -233,12 +227,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
     }
 
     @Override
@@ -303,6 +291,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDownloadFinish() {
         openDrawer();
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+    }
+
+    @Override
+    public void onSetOptionItemVisibility(@IdRes int idMenu, boolean ifVisible) {
     }
 
     public class MyBroadcastReceiver extends BroadcastReceiver {

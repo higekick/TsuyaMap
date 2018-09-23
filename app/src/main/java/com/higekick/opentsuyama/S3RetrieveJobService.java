@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -115,7 +116,11 @@ public class S3RetrieveJobService extends JobService {
                 .setAutoCancel(false)
                 .setSmallIcon(R.drawable.tsuyama_logo_pinkbk);
 
-        retrieveImage(s3Client, transferUtility, this);
+        try {
+            retrieveImage(s3Client, transferUtility, this);
+        } catch (Exception ex) {
+            Toast.makeText(this, R.string.message_error_network, Toast.LENGTH_LONG);
+        }
     }
 
     private void retrieveImage(AmazonS3Client c, TransferUtility t, Context con){

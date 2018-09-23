@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
@@ -15,6 +16,9 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -57,8 +61,34 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         if (getArguments() != null) {
         }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.main, menu);
+        menu.findItem(R.id.action_map).setVisible(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_map) {
+            startGoogleMapFromGallery();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void startGoogleMapFromGallery(){
+        String title = (String) getActivity().getTitle();
+        String encodeQuery = Uri.encode("津山　" + title);
+        Intent intent = new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(
+                "http://maps.google.com/maps?z=12&q=" + encodeQuery));
+        startActivity(intent);
     }
 
     @Override
@@ -77,6 +107,10 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
                 frg.show(getFragmentManager(),"imageDialog");
             }
         });
+
+        if (mListener != null) {
+            mListener.onSetOptionItemVisibility(R.id.action_map, true);
+        }
 
         return view;
     }
@@ -173,18 +207,21 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-//        if (context instanceof OnFragmentInteractionListener) {
-//            mListener = (OnFragmentInteractionListener) context;
-//        } else {
-//            throw new RuntimeException(context.toString()
-//                    + " must implement OnFragmentInteractionListener");
-//        }
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        if (mListener!=null) {
+            mListener.onSetOptionItemVisibility(R.id.action_map, false);
+            mListener = null;
+        }
     }
 
     @Override
@@ -206,5 +243,6 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+        void onSetOptionItemVisibility(int idMenu, boolean ifVisible);
     }
 }

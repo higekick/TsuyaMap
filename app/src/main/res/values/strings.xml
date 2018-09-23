@@ -28,6 +28,7 @@
     <string name="url_csv_aed_install">"http://www.okayama-opendata.jp/ckan/dataset/057117ba-a22d-41b1-bf47-eb6c68d8ea26/resource/5da4e1f7-278d-4325-8d11-58035f64a290/download/tsuyamashiaed.csv"</string>
 
     <string name="action_settings">Settings</string>
+    <string name="action_map">"場所"</string>
 
     <string name="tsuyama_city_hp">https://www.city.tsuyama.lg.jp/top.php</string>
 
@@ -139,5 +140,6 @@
     <string name="title_now_download">ダウンロード中</string>
     <string name="message_pleasewait">お待ちください</string>
     <string name="message_no_network">ネットワーク接続を確認してください。</string>
+    <string name="message_error_network">ダウンロード中にエラーが発生しました。お手数ですがネットワーク接続を確認してください。</string>
 
 </resources>

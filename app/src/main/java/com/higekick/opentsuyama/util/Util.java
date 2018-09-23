@@ -263,4 +263,25 @@ public class Util {
         SharedPreferences data = context.getSharedPreferences(Const.NAME_PREFERRENCE_FILE,Context.MODE_PRIVATE);
         return data.getBoolean(key, false);
     }
+
+    public static int getFileCount(Context context, String dirId, String path) {
+        String pathDir = context.getFilesDir().getAbsolutePath() + "/" + path + "/" + dirId;
+        File f = new File(pathDir);
+        if (f == null) {
+            return 0;
+        }
+        File[] list = f.listFiles();
+        int count = 0;
+        if (list == null) {
+            return 0;
+        }
+        for (File f2 : list) {
+            if (f2.isFile() &&
+                    ( f2.getName().endsWith(".jpg") || f2.getName().endsWith(".json") )
+                    ){
+                count++;
+            }
+        }
+        return count;
+    }
 }

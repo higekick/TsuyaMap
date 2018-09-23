@@ -299,6 +299,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         activity.setResult(RESULT_CANCELED);
 
         for (final String path : dirList) {
+            int picNum = Util.getFileCount(fragment.getActivity(), path, prefix);
+            if (picNum == 0) {
+                continue;
+            }
             String title = Util.getDirName(activity, path, prefix);
             CheckBoxPreference pre = new CheckBoxPreference(activity);
             pre.setTitle(title);

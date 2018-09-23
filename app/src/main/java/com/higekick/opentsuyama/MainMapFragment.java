@@ -14,6 +14,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -77,6 +80,7 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
         }
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -109,17 +113,11 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         view.findViewById(R.id.detail_view).setVisibility(View.GONE);
-        view.findViewById(R.id.btn_map).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (selectedLocationData == null) {return;}
-                String lat = convertStringLatAt(selectedLocationData);
-                // Default google map
-                Intent intent = new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(
-                        "http://maps.google.com/maps?z=12&q=loc:" + lat + "(" + selectedLocationData.getName() + ")" + "&hnear=" + lat));
-                startActivity(intent);
-            }
-        });
+//        view.findViewById(R.id.btn_map).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//            }
+//        });
 
         view.findViewById(R.id.fabFocusOnTsuyama).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,6 +136,34 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
         }
     }
 
+    private Menu mMenu;
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.main, menu);
+        mMenu = menu;
+        menu.findItem(R.id.action_map).setVisible(false);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_map) {
+            startGoogleMapFromMap();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void startGoogleMapFromMap() {
+        if (selectedLocationData == null) {return;}
+        String lat = convertStringLatAt(selectedLocationData);
+        // Default google map
+        Intent intent = new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(
+                "http://maps.google.com/maps?z=12&q=loc:" + lat + "(" + selectedLocationData.getName() + ")" + "&hnear=" + lat));
+        startActivity(intent);
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -153,6 +179,7 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        mMenu.findItem(R.id.action_map).setVisible(false);
     }
 
     @Override
@@ -160,6 +187,9 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
         this.selectedMap = (MapData) data;
 
         viewDetail.setVisibility(View.GONE);
+        if (mMenu!=null) {
+            mMenu.findItem(R.id.action_map).setVisible(false);
+        }
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
@@ -213,8 +243,10 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
     public boolean onMarkerClick(Marker marker) {
         if (mapMarkerData == null || mapMarkerData.size() <= 0){
           viewDetail.setVisibility(View.GONE);
+            mMenu.findItem(R.id.action_map).setVisible(false);
             return false;
         } else {
+            mMenu.findItem(R.id.action_map).setVisible(true);
             viewDetail.setVisibility(View.VISIBLE);
             fabFocusOnTsuyama.setVisibility(View.INVISIBLE);
             selectedMarker = marker;
@@ -245,6 +277,7 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback
     public void onMapClick(LatLng latLng) {
         fabFocusOnTsuyama.setVisibility(View.VISIBLE);
         viewDetail.setVisibility(View.GONE);
+        mMenu.findItem(R.id.action_map).setVisible(false);
     }
 
     private String convertStringLatAt(@NonNull LocationData data){
