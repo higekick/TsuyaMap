@@ -1,5 +1,6 @@
 package com.higekick.opentsuyama;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.higekick.opentsuyama.util.Const;
+import com.higekick.opentsuyama.util.MyDialogFragment;
 import com.higekick.opentsuyama.util.Util;
 
 import java.io.InputStream;
@@ -82,26 +84,44 @@ public class TermsOfUseFragment extends Fragment {
         v.findViewById(R.id.btnGallery).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!Util.netWorkCheck(getContext())) {
-                    return;
-                }
-                Util.setPreferenceValue(getContext(), Const.KEY_CURRENT_USE, Const.CURRENT_USE_IMAGE);
-                startMainActivity();
+                startMainActivity(Const.CURRENT_USE_IMAGE);
             }
         });
         v.findViewById(R.id.btnMap).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!Util.netWorkCheck(getContext())) {
-                    return;
-                }
-                Util.setPreferenceValue(getContext(), Const.KEY_CURRENT_USE, Const.CURRENT_USE_MAP);
-                startMainActivity();
+                startMainActivity(Const.CURRENT_USE_MAP);
             }
         });
     }
 
-    private void startMainActivity(){
+    private void startMainActivity(final int currentUse){
+        switch (Util.netWorkCheck(getContext())){
+            case NONE: {
+                // ダウンロード必要だが、ネットワーク接続がない
+                return;
+            }
+            case WIFI: {
+                startActivityInner(currentUse);
+                break;
+            }
+            case OTHER:
+                MyDialogFragment df = new MyDialogFragment();
+                Resources res = this.getResources();
+                df.setTitle(res.getString(R.string.title_download))
+                        .setMessage(res.getString(R.string.message_recommend_wifi))
+                        .setOnPositiveClickListener(new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startActivityInner(currentUse);
+                            }
+                        })
+                        .show(getFragmentManager(), "dialog");
+        }
+    }
+
+    private void startActivityInner(int currentUse) {
+        Util.setPreferenceValue(getContext(), Const.KEY_CURRENT_USE, currentUse);
         Intent intent = new Intent(getContext(), MainActivity.class);
         getActivity().startActivity(intent);
     }

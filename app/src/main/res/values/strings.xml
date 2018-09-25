@@ -118,6 +118,7 @@
     <string name="pref_title_vibrate">Vibrate</string>
 
     <string name="title_download">ダウンロード</string>
+    <string name="message_recommend_wifi">"Wi-Fi接続でのダウンロードをおすすめします。(約40MB)\n このままダウンロードしますか?"</string>
     <string name="message_dwonload_json">場所データを再ダウンロードしますか？</string>
     <string name="message_dwonload_image">風景写真を再ダウンロードしますか？</string>
     <string name="ok">OK</string>

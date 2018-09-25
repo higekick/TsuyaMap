@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,7 +20,6 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.higekick.opentsuyama.DownloadFragment;
 import com.higekick.opentsuyama.R;
 import com.higekick.opentsuyama.S3RetrieveJobService;
 
@@ -35,7 +35,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
@@ -80,21 +79,25 @@ public class Util {
     }
 
     // ネットワーク接続確認
-    public static boolean netWorkCheck(Context context){
+    public static NETWORK_STATE netWorkCheck(Context context){
         ConnectivityManager cm =  (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = cm.getActiveNetworkInfo();
-        boolean result = false;
-        if( info != null ){
-            result = info.isConnected();
-        } else {
-            result = false;
-        }
-        if (result) {
-            return true;
+        if( info != null && info.isConnected() ){
+            if (info.getType() == ConnectivityManager.TYPE_WIFI ) {
+                return NETWORK_STATE.WIFI;
+            } else {
+                return NETWORK_STATE.OTHER;
+            }
         } else {
             Toast.makeText(context, context.getResources().getText(R.string.message_no_network),Toast.LENGTH_LONG).show();
-            return false;
+            return NETWORK_STATE.NONE;
         }
+    }
+
+    public enum NETWORK_STATE {
+        WIFI
+        ,OTHER
+        ,NONE
     }
 
     // 新規フォルダを作成し、画像ファイルを保存する

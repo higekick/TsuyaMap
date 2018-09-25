@@ -297,7 +297,7 @@ public class S3RetrieveJobService extends JobService {
         String description = "地図情報や写真ファイルのダウンロードに関する通知です";
 
         if (mNofificationManager.getNotificationChannel(Const.ID_CHANNEL_DOWNLOAD) == null) {
-            NotificationChannel channel = new NotificationChannel(Const.ID_CHANNEL_DOWNLOAD, name, NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel channel = new NotificationChannel(Const.ID_CHANNEL_DOWNLOAD, name, NotificationManager.IMPORTANCE_LOW);
             channel.setDescription(description);
             mNofificationManager.createNotificationChannel(channel);
         }

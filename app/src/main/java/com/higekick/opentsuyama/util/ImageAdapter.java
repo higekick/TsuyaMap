@@ -54,7 +54,7 @@ public class ImageAdapter extends BaseAdapter {
         screenWidth = size.x;
         screenHeight = size.y;
 
-        imageViewWidth = screenWidth / 3;
+        imageViewWidth = screenWidth / 2;
         imageViewHeight = (int) ((float)imageViewWidth * (2.0/3.0) );
     }
 

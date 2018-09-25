@@ -2,8 +2,10 @@ package com.higekick.opentsuyama;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
@@ -23,6 +25,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.higekick.opentsuyama.util.Const;
+import com.higekick.opentsuyama.util.MyDialogFragment;
 import com.higekick.opentsuyama.util.ProgressDialogCustome;
 import com.higekick.opentsuyama.util.Util;
 
@@ -121,20 +124,43 @@ public class MainActivity extends AppCompatActivity
         setupSideMenuFromFile(new GalleryData());
     }
 
-    private void tryDownload(String prfx) {
+    private void tryDownload(final String prfx) {
         if (Util.getBooleanPreferenceValue(this, Const.KEY_DOWNLOAD_X + prfx)) {
             // すでにダウンロードしている
             return;
         }
-        if (!Util.netWorkCheck(this)) {
-            // ダウンロード必要だが、ネットワーク接続がない
-            return;
+        switch (Util.netWorkCheck(this)){
+            case NONE: {
+                // ダウンロード必要だが、ネットワーク接続がない
+                return;
+            }
+            case WIFI: {
+                startService(prfx);
+                break;
+            }
+            case OTHER:
+                MyDialogFragment df = new MyDialogFragment();
+                Resources res = this.getResources();
+                df.setTitle(res.getString(R.string.title_download))
+                        .setMessage(res.getString(R.string.message_recommend_wifi))
+                        .setOnPositiveClickListener(new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startService(prfx);
+                            }
+                        })
+                        .show(getSupportFragmentManager(), "dialog");
+                break;
         }
+    }
+
+    private void startService(String prfx) {
         DownloadFragment fragment = new DownloadFragment();
         fragment.show(getSupportFragmentManager(), "tag");
         fragment.setOnDownloadFinishListener(this);
         Util.startService(this, prfx);
     }
+
 
     private void setupSideMenuFromFile(final AbstractContentData contentData){
         NavigationView nv = findViewById(R.id.nav_view);
