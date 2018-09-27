@@ -1,5 +1,6 @@
 package com.higekick.opentsuyama;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -14,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,6 +34,8 @@ import com.higekick.opentsuyama.util.ImageAdapter;
 import com.higekick.opentsuyama.util.Util;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
+
 import static android.content.Context.WINDOW_SERVICE;
 
 
@@ -46,11 +50,17 @@ import static android.content.Context.WINDOW_SERVICE;
 public class MainGalleryFragment extends Fragment implements IMainFragmentExecuter{
     GridView imageGrid;
     GalleryData galleryData;
+    Activity activity;
 
     private OnFragmentInteractionListener mListener;
 
     public MainGalleryFragment() {
         // Required empty public constructor
+    }
+
+    public void setActivity(Activity a, GalleryData d) {
+        activity = a;
+        galleryData = d;
     }
 
     public static MainGalleryFragment newInstance() {
@@ -115,6 +125,12 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
         return view;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        executeLoading(galleryData);
+    }
+
     public static class ImageDialogFragment extends DialogFragment{
 
         public static ImageDialogFragment newInstance(String url, String name){
@@ -129,7 +145,7 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            String url = getArguments().getString("url");
+            final String url = getArguments().getString("url");
             final String name = getArguments().getString("name");
             final ImageView imageView = new ImageView(getActivity());
 
@@ -167,16 +183,34 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
             imageView.invalidate();
 
             return new AlertDialog.Builder(getActivity())
-                    .setPositiveButton("保存する", new DialogInterface.OnClickListener() {
+                    .setPositiveButton("共有する", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            Bitmap bm = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-                            boolean result = Util.createFolderSaveImage(bm, name, getContext());
-                            if (result) {
-                                Toast.makeText(getContext(),"保存しました。" + name, Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(getContext(),"保存に失敗しました。", Toast.LENGTH_LONG).show();
-                            }
+                            // 画像共有するのはPermissionとかいろいろ必要そう
+//                            Intent intent=new Intent();
+//                            intent.setAction(Intent.ACTION_SEND);
+//                            intent.setType("image/jpeg");
+//                            intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+ url));
+//                            startActivity(intent);
+                            // Todo パーミッションとかいらないのか？
+                            Intent intent = new Intent(Intent.ACTION_SEND);
+                            File file = new File(url);
+                            Uri uri = FileProvider.getUriForFile(getContext(), "com.higekick.opentsuyama.fileprovider", file);
+                            intent.setDataAndType(uri, "image/*");
+                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            intent.putExtra(Intent.EXTRA_STREAM, uri);
+                            //@FIXME to blunk mailto, but id dosent't
+                            Uri uriMailTo = Uri.parse("mailto:");
+                            intent.putExtra(Intent.ACTION_SENDTO, uriMailTo);
+                            intent.putExtra(Intent.EXTRA_EMAIL, "");
+                            startActivity(intent);
+
+//                            boolean result = Util.createFolderSaveImage(bm, name, getContext());
+//                            if (result) {
+//                                Toast.makeText(getContext(),"保存しました。" + name, Toast.LENGTH_LONG).show();
+//                            } else {
+//                                Toast.makeText(getContext(),"保存に失敗しました。", Toast.LENGTH_LONG).show();
+//                            }
                         }
                     })
                     .setNegativeButton("閉じる", new DialogInterface.OnClickListener() {
@@ -227,7 +261,8 @@ public class MainGalleryFragment extends Fragment implements IMainFragmentExecut
     @Override
     public void executeLoading(AbstractContentData d) {
         galleryData = (GalleryData) d;
-        imageGrid.setAdapter(new ImageAdapter(getActivity(), galleryData.picUrls));
+        imageGrid.setAdapter(new ImageAdapter(getActivity() == null? activity:getActivity(), galleryData.picUrls));
+        activity.setTitle(d.name);
     }
 
     /**

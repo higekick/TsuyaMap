@@ -1,11 +1,13 @@
 package com.higekick.opentsuyama;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
@@ -39,6 +41,14 @@ public class EntranceGalleryFragment extends Fragment {
     }
 
     RecyclerView rcycleView;
+    OnClickEntranceItemListener mOnClickEntranceItemListener;
+
+    interface OnClickEntranceItemListener{
+        void onClick(GalleryData data);
+    }
+    public void setOnClickEntranceItemListener(OnClickEntranceItemListener l){
+        mOnClickEntranceItemListener = l;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -52,6 +62,15 @@ public class EntranceGalleryFragment extends Fragment {
         MyAdapter adapter = new MyAdapter(getContext(), getListItem());
         rcycleView.setAdapter(adapter);
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        Activity a = getActivity();
+        if (a!=null) {
+            a.setTitle(getResources().getString(R.string.menu_section_gallery));
+        }
     }
 
     private List<ListItem> getListItem() {
@@ -73,6 +92,7 @@ public class EntranceGalleryFragment extends Fragment {
                 ListItem item = new ListItem();
                 item.filePath = data.picUrls.get(0);
                 item.title = dirName;
+                item.data = data;
                 mItems.add(item);
             }
         }
@@ -128,7 +148,7 @@ public class EntranceGalleryFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
-            ListItem item = mItems.get(i);
+            final ListItem item = mItems.get(i);
 
 //            viewHolder.imgView.setLayoutParams(new ViewGroup.LayoutParams(imageViewWidth,imageViewHeight));
             Bitmap bitmap = Util.createGalleryBitmap(item.filePath, getContext());
@@ -141,7 +161,7 @@ public class EntranceGalleryFragment extends Fragment {
             viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    mOnClickEntranceItemListener.onClick(item.data);
                 }
             });
         }
@@ -155,6 +175,7 @@ public class EntranceGalleryFragment extends Fragment {
     private class ListItem {
         public String filePath;
         public String title;
+        public GalleryData data;
     }
 
 

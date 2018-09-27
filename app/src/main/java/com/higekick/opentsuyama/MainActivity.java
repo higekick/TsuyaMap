@@ -12,6 +12,7 @@ import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -35,7 +36,9 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity
         implements EntranceFragment.OnOpenDrawerListener
         ,ProgressDialogCustome.OnDownloadFinishListener
-        ,MainGalleryFragment.OnFragmentInteractionListener {
+        ,MainGalleryFragment.OnFragmentInteractionListener
+        ,EntranceGalleryFragment.OnClickEntranceItemListener {
+
     public static int REQUEST_CODE_SETTING = 1001;
 
     // button to change contents
@@ -117,8 +120,11 @@ public class MainActivity extends AppCompatActivity
     private void changeToGallery(){
         tryDownload(Const.IMG_PRFX);
 
-        MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
+//        MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
+//        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
+        EntranceGalleryFragment fragment = new EntranceGalleryFragment();
+        fragment.setOnClickEntranceItemListener(this);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, EntranceGalleryFragment.class.getSimpleName()).commit();
 
         // set left side menu from image file
         setupSideMenuFromFile(new GalleryData());
@@ -199,6 +205,10 @@ public class MainActivity extends AppCompatActivity
                 IMainFragmentExecuter fragment = (IMainFragmentExecuter) getSupportFragmentManager().findFragmentByTag(contentData.getFragmentClassName());
                 if (fragment != null) {
                     fragment.executeLoading(data);
+                } else {
+                    if (data instanceof GalleryData) {
+                        onClick((GalleryData) data);
+                    }
                 }
 
                 setTitle(data.name);
@@ -327,6 +337,13 @@ public class MainActivity extends AppCompatActivity
     public void onSetOptionItemVisibility(@IdRes int idMenu, boolean ifVisible) {
     }
 
+    @Override
+    public void onClick(GalleryData data) {
+        MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
+        mainGalleryFragment.setActivity(this, data);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
+    }
+
     public class MyBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent i) {
@@ -339,6 +356,7 @@ public class MainActivity extends AppCompatActivity
         if (keyCode != KeyEvent.KEYCODE_BACK) {
             return super.onKeyDown(keyCode, event);
         } else {
+            // Todo backkeyの挙動もう少し確認
             openDrawer();
             return false;
         }
