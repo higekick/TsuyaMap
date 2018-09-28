@@ -44,7 +44,7 @@ public class EntranceGalleryFragment extends Fragment {
     OnClickEntranceItemListener mOnClickEntranceItemListener;
 
     interface OnClickEntranceItemListener{
-        void onClick(GalleryData data);
+        void onClickEntranceItem(GalleryData data);
     }
     public void setOnClickEntranceItemListener(OnClickEntranceItemListener l){
         mOnClickEntranceItemListener = l;
@@ -79,21 +79,22 @@ public class EntranceGalleryFragment extends Fragment {
         String dirPathImage = getContext().getFilesDir().getAbsolutePath() + "/" + Const.IMG_PRFX;
         File dirFileImage = new File(dirPathImage);
         String[] dirList = dirFileImage.list();
-
-        for (String dir : dirList) {
-            if (Util.getInvisibleFile(getContext(), dir, Const.IMG_PRFX).exists()) {
-                // if setting invisible by setting menu, do not show.
-                continue;
-            }
-            String dirName = Util.getDirName(getContext(), dir, Const.IMG_PRFX);
-            GalleryData data = new GalleryData();
-            data.importFromFile(getContext(), dirName, dir);
-            if (data.picUrls != null && data.picUrls.size() > 0) {
-                ListItem item = new ListItem();
-                item.filePath = data.picUrls.get(0);
-                item.title = dirName;
-                item.data = data;
-                mItems.add(item);
+        if (dirList != null) {
+            for (String dir : dirList) {
+                if (Util.getInvisibleFile(getContext(), dir, Const.IMG_PRFX).exists()) {
+                    // if setting invisible by setting menu, do not show.
+                    continue;
+                }
+                String dirName = Util.getDirName(getContext(), dir, Const.IMG_PRFX);
+                GalleryData data = new GalleryData();
+                data.importFromFile(getContext(), dirName, dir);
+                if (data.picUrls != null && data.picUrls.size() > 0) {
+                    ListItem item = new ListItem();
+                    item.filePath = data.picUrls.get(0);
+                    item.title = dirName;
+                    item.data = data;
+                    mItems.add(item);
+                }
             }
         }
 
@@ -139,10 +140,6 @@ public class EntranceGalleryFragment extends Fragment {
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
             // Create a new view.
             View v = inflater.inflate(R.layout.map_entrance_item, viewGroup, false);
-            // you can also set view size here. like this
-            // ViewGroup.LayoutParams params = v.getLayoutParams();
-            // params.height = view_size;
-            // v.setLayoutParams(params);
             return new MyAdapter.ViewHolder(v);
         }
 
@@ -150,7 +147,6 @@ public class EntranceGalleryFragment extends Fragment {
         public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
             final ListItem item = mItems.get(i);
 
-//            viewHolder.imgView.setLayoutParams(new ViewGroup.LayoutParams(imageViewWidth,imageViewHeight));
             Bitmap bitmap = Util.createGalleryBitmap(item.filePath, getContext());
             if (bitmap != null) {
                 viewHolder.imgView.setImageBitmap(bitmap);
@@ -161,7 +157,7 @@ public class EntranceGalleryFragment extends Fragment {
             viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mOnClickEntranceItemListener.onClick(item.data);
+                    mOnClickEntranceItemListener.onClickEntranceItem(item.data);
                 }
             });
         }

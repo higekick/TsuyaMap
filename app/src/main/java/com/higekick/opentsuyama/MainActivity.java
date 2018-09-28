@@ -1,24 +1,20 @@
 package com.higekick.opentsuyama;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -36,7 +32,6 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity
         implements EntranceFragment.OnOpenDrawerListener
         ,ProgressDialogCustome.OnDownloadFinishListener
-        ,MainGalleryFragment.OnFragmentInteractionListener
         ,EntranceGalleryFragment.OnClickEntranceItemListener {
 
     public static int REQUEST_CODE_SETTING = 1001;
@@ -45,18 +40,18 @@ public class MainActivity extends AppCompatActivity
     Button btnChangeToMap;
     Button btnChangeToGallery;
     Button btnChangeToSettings;
-
-    MyBroadcastReceiver mReciever;
+    // drawerLayout
+    DrawerLayout drawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         // set up drwaer view
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         setNavigationView();
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -70,9 +65,6 @@ public class MainActivity extends AppCompatActivity
             }
             reload();
         }
-
-        mReciever = new MyBroadcastReceiver();
-        registerReceiver(mReciever, new IntentFilter(Const.ACTION_RETRIEVE_FINISH));
     }
 
     private void reload() {
@@ -100,31 +92,30 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mReciever != null) {
-            unregisterReceiver(mReciever);
-            mReciever = null;
-        }
     }
 
     private void changeToMap(){
         tryDownload(Const.JSON_PRFX);
 
         MainMapFragment mainMapFragment = MainMapFragment.newInstance();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainMapFragment, MainMapFragment.class.getSimpleName()).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, mainMapFragment, MainMapFragment.class.getSimpleName())
+                .commit();
 
-        // set left side menu from json assets
-        // set left side menu from image file
+        // set left side menu from json file
         setupSideMenuFromFile(new MapData());
     }
 
     private void changeToGallery(){
         tryDownload(Const.IMG_PRFX);
 
-//        MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
-//        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
         EntranceGalleryFragment fragment = new EntranceGalleryFragment();
         fragment.setOnClickEntranceItemListener(this);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, EntranceGalleryFragment.class.getSimpleName()).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment, EntranceGalleryFragment.class.getSimpleName())
+                .commit();
 
         // set left side menu from image file
         setupSideMenuFromFile(new GalleryData());
@@ -133,6 +124,9 @@ public class MainActivity extends AppCompatActivity
     private void tryDownload(final String prfx) {
         if (Util.getBooleanPreferenceValue(this, Const.KEY_DOWNLOAD_X + prfx)) {
             // すでにダウンロードしている
+            if (prfx.equals(Const.JSON_PRFX)) {
+                openDrawer();
+            }
             return;
         }
         switch (Util.netWorkCheck(this)){
@@ -149,12 +143,7 @@ public class MainActivity extends AppCompatActivity
                 Resources res = this.getResources();
                 df.setTitle(res.getString(R.string.title_download))
                         .setMessage(res.getString(R.string.message_recommend_wifi))
-                        .setOnPositiveClickListener(new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                startService(prfx);
-                            }
-                        })
+                        .setOnPositiveClickListener( (dialog, which) -> startService(prfx) )
                         .show(getSupportFragmentManager(), "dialog");
                 break;
         }
@@ -167,17 +156,14 @@ public class MainActivity extends AppCompatActivity
         Util.startService(this, prfx);
     }
 
-
     private void setupSideMenuFromFile(final AbstractContentData contentData){
         NavigationView nv = findViewById(R.id.nav_view);
         Menu m = nv.getMenu();
         m.clear();
 
         Context con = this;
-        String dirPathImage;
 
         // setup menus
-        final HashMap<Integer, AbstractContentData> mapDataHashMap;
         SubMenu sm;
         String path;
         if (contentData instanceof MapData){
@@ -190,10 +176,10 @@ public class MainActivity extends AppCompatActivity
             // nothing to do
             return;
         }
-        dirPathImage = con.getFilesDir().getAbsolutePath() + "/" + path;
-        File dirFileImage = new File(dirPathImage);
-        String[] dirList = dirFileImage.list();
-        mapDataHashMap = setupMenuItemFromFile(sm,dirList,contentData,path);
+        final String dirPathImage = con.getFilesDir().getAbsolutePath() + "/" + path;
+        final File dirFileImage = new File(dirPathImage);
+        final String[] dirList = dirFileImage.list();
+        final HashMap<Integer, AbstractContentData> mapDataHashMap = setupMenuItemFromFile(sm,dirList,contentData,path);
 
         // left side menu select action
         nv.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -207,12 +193,11 @@ public class MainActivity extends AppCompatActivity
                     fragment.executeLoading(data);
                 } else {
                     if (data instanceof GalleryData) {
-                        onClick((GalleryData) data);
+                        onClickEntranceItem((GalleryData) data);
                     }
                 }
 
                 setTitle(data.name);
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
                 drawer.closeDrawer(GravityCompat.START);
 
                 return false;
@@ -255,55 +240,25 @@ public class MainActivity extends AppCompatActivity
         return mapDataHashMap;
     }
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-        return super.onOptionsItemSelected(item);
-    }
-
     private void setNavigationView() {
-        NavigationView nv = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView nv = findViewById(R.id.nav_view);
         View headerLayout = nv.getHeaderView(0);
 
         // set up Button
-        btnChangeToMap = (Button) headerLayout.findViewById(R.id.btnMap);
-        btnChangeToGallery = (Button) headerLayout.findViewById(R.id.btnGallery);
-        btnChangeToMap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_MAP);
-                changeToMap();
-            }
+        btnChangeToMap = headerLayout.findViewById(R.id.btnMap);
+        btnChangeToMap.setOnClickListener( (v) -> {
+            Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_MAP);
+            changeToMap();
         });
-        btnChangeToGallery.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_IMAGE);
-                changeToGallery();
-            }
+        btnChangeToGallery = headerLayout.findViewById(R.id.btnGallery);
+        btnChangeToGallery.setOnClickListener( (v) -> {
+            Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_IMAGE);
+            changeToGallery();
         });
-
-        btnChangeToSettings = (Button) headerLayout.findViewById(R.id.btnSetting);
-        btnChangeToSettings.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(MainActivity.this,SettingsActivity.class);
-                startActivityForResult(i, REQUEST_CODE_SETTING);
-            }
+        btnChangeToSettings = headerLayout.findViewById(R.id.btnSetting);
+        btnChangeToSettings.setOnClickListener( (v) -> {
+            Intent i = new Intent(MainActivity.this,SettingsActivity.class);
+            startActivityForResult(i, REQUEST_CODE_SETTING);
         });
     }
 
@@ -320,45 +275,39 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void openDrawer() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.openDrawer(GravityCompat.START);
     }
 
     @Override
     public void onDownloadFinish() {
-        openDrawer();
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-    }
-
-    @Override
-    public void onSetOptionItemVisibility(@IdRes int idMenu, boolean ifVisible) {
-    }
-
-    @Override
-    public void onClick(GalleryData data) {
-        MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
-        mainGalleryFragment.setActivity(this, data);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName()).commit();
-    }
-
-    public class MyBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent i) {
-            // changeToGallery();
+        reload();
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (currentFragment instanceof MainMapFragment) {
+            openDrawer();
         }
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode != KeyEvent.KEYCODE_BACK) {
-            return super.onKeyDown(keyCode, event);
+    public void onClickEntranceItem(GalleryData data) {
+        MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
+        mainGalleryFragment.setActivity(this, data);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.addToBackStack("onEntrance");
+        ft.replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName());
+        ft.commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (currentFragment instanceof MainMapFragment) {
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                super.onBackPressed();
+            } else {
+                openDrawer();
+            }
         } else {
-            // Todo backkeyの挙動もう少し確認
-            openDrawer();
-            return false;
+            super.onBackPressed();
         }
     }
 }
