@@ -1,0 +1,34 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- These settings headers are only used on tablets. -->
+
+    <header
+        android:fragment="com.higekick.opentsuyama.SettingsActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_map_teal_500_24dp"
+        android:title="@string/pref_header_general" />
+
+    <header
+        android:fragment="com.higekick.opentsuyama.SettingsActivity$NotificationPreferenceFragment"
+        android:icon="@drawable/ic_photo_blue_300_24dp"
+        android:title="@string/pref_header_notifications" />
+
+    <header
+        android:fragment="com.higekick.opentsuyama.SettingsActivity$DataSyncPreferenceFragment"
+        android:icon="@drawable/ic_cloud_download_grey_600_24dp"
+        android:title="@string/pref_header_data_sync" />
+
+    <header
+        android:id="@+id/header_link_open_data"
+        android:icon="@drawable/ic_link_black_24dp"
+        android:summary="@string/pref_header_summary_opend_data"
+        android:title="@string/pref_header_about_opend_data"
+        />
+
+    <header
+        android:id="@+id/header_terms_of_use"
+        android:icon="@drawable/ic_description_blue_grey_500_24dp"
+        android:title="@string/header_terms_of_use"
+        />
+
+
+</preference-headers>

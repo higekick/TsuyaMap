@@ -3,7 +3,12 @@
 /local.properties
 /.idea/workspace.xml
 /.idea/libraries
+/.idea/caches
+/.idea/misc.xml
 .DS_Store
 /build
+/app/release
 /captures
 .externalNativeBuild
+
+app/src/main/res/raw/awsconfiguration\.json

@@ -1,37 +1,146 @@
 [
-  { "id": "shiyakusho",
-    "icon": "ic_menu_camera",
-    "name": "市役所",
-    "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shiyakushoichi_2016.11.CSV"
+  {
+    "id": "public_place",
+    "section_name": "公共施設",
+    "places": [
+      {
+        "id": "aedPosition",
+        "icon": "ic_menu_camera",
+        "name": "AED設置場所",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/057117ba-a22d-41b1-bf47-eb6c68d8ea26/resource/5da4e1f7-278d-4325-8d11-58035f64a290/download/tsuyamashiaed.csv"
+      },
+      {
+        "id": "park",
+        "icon": "ic_menu_gallery",
+        "name": "公園等",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/5d03df01-11d8-4dde-b972-4d4aa5041a17/resource/55b6e971-4eb8-4c34-9c8b-ead5b7ba3cfe/download/tsuyamashitoshikouentou.csv"
+      },
+      {
+        "id": "shiyakusho",
+        "icon": "ic_menu_camera",
+        "name": "市役所",
+        "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shiyakushoichi_2016.11.CSV"
+      },
+      {
+        "id": "library",
+        "icon": "ic_menu_camera",
+        "name": "市立図書館",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/7fab8308-d1a0-4fb6-8dd5-5c85129c8d3f/resource/75765efe-64b3-4882-a924-6d275e2a36ae/download/shitoshokan.csv"
+      },
+      {
+        "id": "public_facility",
+        "icon": "ic_menu_slideshow",
+        "name": "公民館等集会施設",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/24bb4e79-7775-4158-b0a8-71cd3ef39622/resource/258e99f7-ce8f-4733-abb1-343a80b2d999/download/tsuyamashikouminkantoushuukaishisetsu.csv"
+      },
+      {
+        "id": "cultural_center",
+        "icon": "ic_menu_camera",
+        "name": "文化センター等",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/c0695b99-901a-4d51-987c-0d8bc0f9ea64/resource/1739535d-82ff-44c2-af33-64ead02781a1/download/ichibunkasenta30fc.csv"
+      },
+      {
+        "id": "life_learning_facility",
+        "icon": "ic_menu_gallery",
+        "name": "生涯学習施設",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/f000b313-a5b9-41c3-b7a4-759af20250b8/resource/b62e39c3-323e-41ed-81cd-a9d9ff12991c/download/tsuyamashishougaigakushuushisetsu.csv"
+      },
+      {
+        "id": "city_facility",
+        "icon": "ic_menu_slideshow",
+        "name": "市施設",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/6b62780a-ed31-4edf-b020-8c67d6e65500/resource/dffa282b-c9b1-4d42-b258-2dbe6b71c024/download/shiyakushoshishoshutchousho.csv"
+      },
+      {
+        "id": "city_facility_other,",
+        "icon": "ic_menu_slideshow",
+        "name": "その他市施設",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/6b62780a-ed31-4edf-b020-8c67d6e65500/resource/620465bc-d827-4e7d-a535-28fcf28db454/download/shishisetsu.csv"
+      }
+    ]
   },
   {
-    "id": "primarySchool",
-    "icon": "ic_menu_gallery",
-    "name": "小学校",
-    "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shougakkouichi_2016.11.CSV"
+    "id": "education_place",
+    "section_name": "教育・子育て施設",
+    "places": [
+      {
+        "id": "kindergarten",
+        "icon": "ic_menu_slideshow",
+        "name": "幼稚園",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/3013a73e-0f71-42f1-b9a9-14efca5d905f/resource/964178aa-3e2a-444a-9eee-c6530aab1fae/download/youchien.csv"
+      },
+      {
+        "id": "nursery",
+        "icon": "ic_menu_gallery",
+        "name": "保育園保育所",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/9c0039e2-a537-4bc4-8c3f-ae4b7e597045/resource/43509964-b821-451c-b19c-f6524a06eeaf/download/hoikuenhoikusho.csv"
+      },
+      {
+        "id": "primarySchool",
+        "icon": "ic_menu_gallery",
+        "name": "小学校",
+        "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_shougakkouichi_2016.11.CSV"
+      },
+      {
+        "id": "juniorHighSchool",
+        "icon": "ic_menu_slideshow",
+        "name": "中学校",
+        "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_chugakkouichi_2016.11.CSV"
+      },
+      {
+        "id": "children_club",
+        "icon": "ic_menu_slideshow",
+        "name": "放課後児童クラブ",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/1d85cb5e-2efe-4510-aec3-dc117dd820ae/resource/9ce0a476-0aed-4cc9-8d34-7e3485ee3d96/download/jidoukurabu.csv"
+      },
+      {
+      "id": "children_facility",
+        "icon": "ic_menu_camera",
+        "name": "児童養護施設",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/2d1d2cdd-e137-4374-a7f0-9c0bcab5a77c/resource/24c2fc06-8b5d-40d8-b89f-9347dc0345ef/download/jidouyougoshisetsu.csv"
+      },
+      {
+        "id": "jidokan",
+        "icon": "ic_menu_gallery",
+        "name": "児童館",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/3d09f07d-c304-4570-b11c-5317cb3f7654/resource/eb04a16e-4aba-4194-af56-a7cc97c7a6b6/download/jidoukan.csv"
+      },
+      {
+        "id": "nintei_kodomoen",
+        "icon": "ic_menu_gallery",
+        "name": "認定こども園",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/61918ddd-f1fd-48b9-8220-3bba1a45a08d/resource/5a71f112-b5f3-4e12-95bb-4a854f985eba/download/ninteikodomoen.csv"
+      }
+    ]
   },
   {
-    "id": "juniorHighSchool",
-    "icon": "ic_menu_slideshow",
-    "name": "中学校",
-    "url": "https://www.city.tsuyama.lg.jp/common/photo/free/files/8647/tsuyamashi_chugakkouichi_2016.11.CSV"
-  },
-  {
-    "id": "aedPosition",
-    "icon": "ic_menu_camera",
-    "name": "AED設置場所",
-    "url": "http://www.okayama-opendata.jp/ckan/dataset/057117ba-a22d-41b1-bf47-eb6c68d8ea26/resource/5da4e1f7-278d-4325-8d11-58035f64a290/download/tsuyamashiaed.csv"
-  },
-  {
-    "id": "haikibutsu",
-    "icon": "ic_menu_gallery",
-    "name": "廃棄物処理施設",
-    "url": "http://www.okayama-opendata.jp/ckan/dataset/e18d609b-812a-4326-bbd5-b845a9c19483/resource/e08f630e-ba55-4c00-bc20-8f1a0fb369c7/download/tsuyamashihaikibutsushorishisetsu.csv"
-  },
-  {
-    "id": "park",
-    "icon": "ic_menu_gallery",
-    "name": "公園等",
-    "url": "http://www.okayama-opendata.jp/ckan/dataset/5d03df01-11d8-4dde-b972-4d4aa5041a17/resource/55b6e971-4eb8-4c34-9c8b-ead5b7ba3cfe/download/tsuyamashitoshikouentou.csv"
+    "id": "other_place",
+    "section_name": "その他施設",
+    "places": [
+      {
+        "id": "haikibutsu",
+        "icon": "ic_menu_gallery",
+        "name": "廃棄物処理施設",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/e18d609b-812a-4326-bbd5-b845a9c19483/resource/e08f630e-ba55-4c00-bc20-8f1a0fb369c7/download/tsuyamashihaikibutsushorishisetsu.csv"
+      },
+      {
+        "id": "industrial_park",
+        "icon": "ic_menu_slideshow",
+        "name": "工業団地等",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/52e1a3da-5ebf-4029-8390-9775de986528/resource/cd759fce-65d2-4981-a129-a7defb2e1976/download/tsuyamashikougyoudanchitou.csv"
+      },
+      {
+        "id": "voting_place",
+        "icon": "ic_menu_camera",
+        "name": "選挙投票所",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/b90aa419-6917-41f8-8636-f9fe2ecb3a2c/resource/df9b7e0d-ac6c-4f78-a673-788c17e1f88d/download/tsuyamashisenkyotouhyousho.csv"
+      },
+      {
+        "id": "kyushoku_center",
+        "icon": "ic_menu_gallery",
+        "name": "給食センター",
+        "url": "http://www.okayama-opendata.jp/ckan/dataset/835cd3b8-96c2-4e6a-904b-2c7d2ef0df59/resource/3a6d1bdb-3f7f-4ea9-85d5-ec61d7777ed4/download/tsuyamashikyuushokusenta30fc.csv"
+      }
+    ]
   }
 ]

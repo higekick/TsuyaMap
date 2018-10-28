@@ -1,252 +1,313 @@
 package com.higekick.opentsuyama;
 
-import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
+import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.widget.Button;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.higekick.opentsuyama.dao.LocationData;
-import com.higekick.opentsuyama.util.FileDownLoader;
+import com.higekick.opentsuyama.util.Const;
+import com.higekick.opentsuyama.util.MyDialogFragment;
+import com.higekick.opentsuyama.util.ProgressDialogCustome;
 import com.higekick.opentsuyama.util.Util;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.io.File;
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback
-                                                                ,GoogleMap.OnMarkerClickListener
-                                                                ,FileDownLoader.OnMarkerSetupListner
-                                                                ,GoogleMap.OnMapClickListener{
+public class MainActivity extends AppCompatActivity
+        implements EntranceFragment.OnOpenDrawerListener
+        ,ProgressDialogCustome.OnDownloadFinishListener
+        ,EntranceGalleryFragment.OnClickEntranceItemListener {
 
-    GoogleMap gMap;
+    public static int REQUEST_CODE_SETTING = 1001;
 
-    final LatLng centerOfTsuyama = new LatLng(35.069104, 134.004542);
+    // button to change contents
+    Button btnChangeToMap;
+    Button btnChangeToGallery;
+    Button btnChangeToSettings;
+    // drawerLayout
+    DrawerLayout drawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        // set up drwaer view
+        drawer = findViewById(R.id.drawer_layout);
         setNavigationView();
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        MapFragment mapFragment = (MapFragment) getFragmentManager()
-                .findFragmentById(R.id.map);
-        // Get the button view
-        View locationButton = ((View) mapFragment.getView().findViewById(1).getParent()).findViewById(2);
-
-        // and next place it, for exemple, on bottom right (as Google Maps app)
-        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-        // position on right bottom
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-        rlp.setMargins(0, 0, 30, 30);
-
-        mapFragment.getMapAsync(this);
-
-        findViewById(R.id.detail_view).setVisibility(View.GONE);
-
-        findViewById(R.id.btn_map).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (selectedLocationData == null) {return;}
-                String lat = convertStringLatAt(selectedLocationData);
-                // Default google map
-                Intent intent = new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(
-                        "http://maps.google.com/maps?z=12&q=loc:" + lat + "(" + selectedLocationData.getName() + ")" + "&hnear=" + lat));
-                startActivity(intent);
+        // set up map fragment
+        if (findViewById(R.id.fragment_container) != null) {
+            if (savedInstanceState != null) {
+                return;
             }
-        });
-
-        findViewById(R.id.fabFocusOnTsuyama).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centerOfTsuyama, 10));
-            }
-        });
+            reload();
+        }
     }
 
-    private String convertStringLatAt(@NonNull LocationData data){
-        return Double.toString(selectedLocationData.getLocationY()) + ", " + Double.toString(selectedLocationData.getLocationX());
-    }
-
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+    private void reload() {
+        int currentUse = Util.getIntPreferenceValue(this, Const.KEY_CURRENT_USE);
+        if (currentUse == Const.CURRENT_USE_IMAGE) {
+            changeToGallery();
+        } else if (currentUse == Const.CURRENT_USE_MAP) {
+            changeToMap();
         } else {
-            super.onBackPressed();
+            Intent intent = new Intent(this, IntroductionActivity.class);
+            startActivity(intent);
         }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void setNavigationView() {
-        Log.d("openTsuyama", "setNavigationView");
-        NavigationView nv = (NavigationView) findViewById(R.id.nav_view);
-        Menu m = nv.getMenu();
-        SubMenu sm = m.addSubMenu(R.string.menu_section_position);
-
-        // set left side menu from json assets
-        JSONArray datas=null;
-        try {
-            datas = new JSONArray(Util.getJsonFromRawFile(R.raw.map_data, MainActivity.this));
-        } catch (JSONException ex){
-            Log.d("MainActivity", "unhandled JsonException.", ex);
-        }
-        final HashMap<Integer, MapData> mapDataHashMap = new HashMap<>();
-        for(int i= 0; i<= datas.length() -1; i++){
-            try {
-                MapData mapData = new MapData();
-                mapData.importFromJson(datas.getJSONObject(i));
-                int resIconId = getResources().getIdentifier(mapData.icon,"drawable",this.getPackageName());
-                sm.add(0, i,i, mapData.name).setIcon(resIconId);
-                mapDataHashMap.put(i,mapData);
-            } catch ( JSONException ex){
-                Log.d("MainActivity", "unhandled JsonException.", ex);
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_SETTING) {
+            if (resultCode == RESULT_OK) {
+                reload();
             }
-
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    private void changeToMap(){
+        tryDownload(Const.JSON_PRFX);
+
+        MainMapFragment mainMapFragment = MainMapFragment.newInstance();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, mainMapFragment, MainMapFragment.class.getSimpleName())
+                .commit();
+
+        // set left side menu from json file
+        setupSideMenuFromFile(new MapData());
+    }
+
+    private void changeToGallery(){
+        tryDownload(Const.IMG_PRFX);
+
+        EntranceGalleryFragment fragment = new EntranceGalleryFragment();
+        fragment.setOnClickEntranceItemListener(this);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment, EntranceGalleryFragment.class.getSimpleName())
+                .commit();
+
+        // set left side menu from image file
+        setupSideMenuFromFile(new GalleryData());
+    }
+
+    private void tryDownload(final String prfx) {
+        if (Util.getBooleanPreferenceValue(this, Const.KEY_DOWNLOAD_X + prfx)) {
+            // すでにダウンロードしている
+            if (prfx.equals(Const.JSON_PRFX)) {
+                openDrawer();
+            }
+            return;
+        }
+        switch (Util.netWorkCheck(this)){
+            case NONE: {
+                // ダウンロード必要だが、ネットワーク接続がない
+                return;
+            }
+            case WIFI: {
+                startService(prfx);
+                break;
+            }
+            case OTHER:
+                MyDialogFragment df = new MyDialogFragment();
+                Resources res = this.getResources();
+                df.setTitle(res.getString(R.string.title_download))
+                        .setMessage(res.getString(R.string.message_recommend_wifi))
+                        .setOnPositiveClickListener( (dialog, which) -> startService(prfx) )
+                        .show(getSupportFragmentManager(), "dialog");
+                break;
+        }
+    }
+
+    private void startService(String prfx) {
+        DownloadFragment fragment = new DownloadFragment();
+        fragment.show(getSupportFragmentManager(), "tag");
+        fragment.setOnDownloadFinishListener(this);
+        Util.startService(this, prfx);
+    }
+
+    private void setupSideMenuFromFile(final AbstractContentData contentData){
+        NavigationView nv = findViewById(R.id.nav_view);
+        Menu m = nv.getMenu();
+        m.clear();
+
+        Context con = this;
+
+        // setup menus
+        SubMenu sm;
+        String path;
+        if (contentData instanceof MapData){
+            sm = nv.getMenu().addSubMenu(R.string.menu_section_position);
+            path = Const.JSON_PRFX;
+        } else if (contentData instanceof GalleryData){
+            sm = nv.getMenu().addSubMenu(R.string.menu_section_gallery);
+            path = Const.IMG_PRFX;
+        } else {
+            // nothing to do
+            return;
+        }
+        final String dirPathImage = con.getFilesDir().getAbsolutePath() + "/" + path;
+        final File dirFileImage = new File(dirPathImage);
+        final String[] dirList = dirFileImage.list();
+        final HashMap<Integer, AbstractContentData> mapDataHashMap = setupMenuItemFromFile(sm,dirList,contentData,path);
 
         // left side menu select action
         nv.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
-                MapData mapData = mapDataHashMap.get(id);
+                AbstractContentData data = mapDataHashMap.get(id);
 
-                executeLoading(mapData);
+                IMainFragmentExecuter fragment = (IMainFragmentExecuter) getSupportFragmentManager().findFragmentByTag(contentData.getFragmentClassName());
+                if (fragment != null) {
+                    fragment.executeLoading(data);
+                } else {
+                    if (data instanceof GalleryData) {
+                        onClickEntranceItem((GalleryData) data);
+                    }
+                }
 
-                setTitle(mapData.name);
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                setTitle(data.name);
                 drawer.closeDrawer(GravityCompat.START);
-                findViewById(R.id.detail_view).setVisibility(View.GONE);
 
                 return false;
             }
         });
     }
 
-    private void executeLoading(MapData data) {
-        this.selectedMap = data;
-        MapFragment mapFragment = (MapFragment) getFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+    private HashMap<Integer, AbstractContentData> setupMenuItemFromFile(SubMenu sm,
+                                                                        String[] dirs,
+                                                                        final AbstractContentData contentData,
+                                                                        final String path) {
+        final HashMap<Integer, AbstractContentData> mapDataHashMap = new HashMap<>();
+
+        if (dirs != null) {
+            for (int i = 0; i <= dirs.length - 1; i++) {
+                if (Util.getInvisibleFile(this, dirs[i], path).exists()) {
+                    // if setting invisible by setting menu, do not show.
+                    continue;
+                }
+                AbstractContentData data = contentData.newInstance();
+                String dirName = Util.getDirName(this, dirs[i], path);
+                data.importFromFile(this, dirName, dirs[i]);
+                int resIconId;
+                String itemName;
+                int picNum = Util.getFileCount(this, dirs[i], path);
+                if (picNum == 0) {
+                    continue;
+                }
+                if (path.equals(Const.JSON_PRFX)) {
+                    resIconId = getResources().getIdentifier("ic_menu_gallery", "drawable", this.getPackageName());
+                    itemName = dirName;
+                } else {
+                    resIconId = getResources().getIdentifier("ic_menu_camera", "drawable", this.getPackageName());
+                    itemName = dirName + " (" + picNum + ")";
+                }
+                sm.add(0, i, i, itemName).setIcon(resIconId);
+                mapDataHashMap.put(i, data);
+            }
+        }
+        return mapDataHashMap;
     }
 
-    MapData selectedMap;
+    private void setNavigationView() {
+        NavigationView nv = findViewById(R.id.nav_view);
+        View headerLayout = nv.getHeaderView(0);
+
+        // set up Button
+        btnChangeToMap = headerLayout.findViewById(R.id.btnMap);
+        btnChangeToMap.setOnClickListener( (v) -> {
+            Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_MAP);
+            changeToMap();
+        });
+        btnChangeToGallery = headerLayout.findViewById(R.id.btnGallery);
+        btnChangeToGallery.setOnClickListener( (v) -> {
+            Util.setPreferenceValue(MainActivity.this, Const.KEY_CURRENT_USE, Const.CURRENT_USE_IMAGE);
+            changeToGallery();
+        });
+        btnChangeToSettings = headerLayout.findViewById(R.id.btnSetting);
+        btnChangeToSettings.setOnClickListener( (v) -> {
+            Intent i = new Intent(MainActivity.this,SettingsActivity.class);
+            startActivityForResult(i, REQUEST_CODE_SETTING);
+        });
+    }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        gMap = googleMap;
+    public void onExecuteGalleryOpen() {
+        openDrawer();
+        changeToGallery();
+    }
 
-        googleMap.setOnMarkerClickListener(this);
-        googleMap.setOnMapClickListener(this);
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            googleMap.setMyLocationEnabled(true);
+    @Override
+    public void onExecuteMapOpen() {
+        openDrawer();
+        changeToMap();
+    }
+
+    private void openDrawer() {
+        drawer.openDrawer(GravityCompat.START);
+    }
+
+    @Override
+    public void onDownloadFinish() {
+        reload();
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (currentFragment instanceof MainMapFragment) {
+            openDrawer();
         }
+    }
 
-        googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-        googleMap.getUiSettings().setMapToolbarEnabled(false);
+    @Override
+    public void onClickEntranceItem(GalleryData data) {
+        MainGalleryFragment mainGalleryFragment = MainGalleryFragment.newInstance();
+        mainGalleryFragment.setActivity(this, data);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.addToBackStack("onEntrance");
+        ft.replace(R.id.fragment_container, mainGalleryFragment, MainGalleryFragment.class.getSimpleName());
+        ft.commit();
+    }
 
-        if (selectedMap == null || TextUtils.isEmpty(selectedMap.url)) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centerOfTsuyama, 10));
+    @Override
+    public void onBackPressed() {
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (currentFragment instanceof MainMapFragment) {
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                super.onBackPressed();
+            } else {
+                openDrawer();
+            }
         } else {
-            FileDownLoader loader = new FileDownLoader(googleMap, this, this);
-            loader.execute(selectedMap);
+            super.onBackPressed();
         }
-
-}
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        if (mapMarkerData == null || mapMarkerData.size() <= 0){
-            findViewById(R.id.detail_view).setVisibility(View.GONE);
-            return false;
-        } else {
-            findViewById(R.id.detail_view).setVisibility(View.VISIBLE);
-            findViewById(R.id.fabFocusOnTsuyama).setVisibility(View.INVISIBLE);
-            selectedMarker = marker;
-        }
-
-        selectedLocationData = mapMarkerData.get(marker);
-        if (selectedLocationData == null) {return false;}
-
-        ((TextView) findViewById(R.id.txt_place_name)).setText(selectedLocationData.getName());
-        ((TextView) findViewById(R.id.txt_address)).setText(selectedLocationData.getAddress());
-        ((TextView) findViewById(R.id.txt_memo)).setText(selectedLocationData.getMemo());
-        ((TextView) findViewById(R.id.txt_tel)).setText(selectedLocationData.getTel());
-        ((TextView) findViewById(R.id.txt_url)).setText(selectedLocationData.getUrl());
-
-        return false;
-    }
-
-    HashMap<Marker, LocationData> mapMarkerData = new HashMap<>();
-    Marker selectedMarker;
-    LocationData selectedLocationData;
-
-    @Override
-    public void onMarkerSetup(HashMap<Marker, LocationData> markerLocationDataHashMap) {
-        mapMarkerData = markerLocationDataHashMap;
-    }
-
-    @Override
-    public void onMapClick(LatLng latLng) {
-        findViewById(R.id.fabFocusOnTsuyama).setVisibility(View.VISIBLE);
-        findViewById(R.id.detail_view).setVisibility(View.GONE);
     }
 }

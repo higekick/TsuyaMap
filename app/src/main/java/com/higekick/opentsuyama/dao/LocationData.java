@@ -1,12 +1,15 @@
 package com.higekick.opentsuyama.dao;
 
-import io.realm.RealmObject;
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by User on 2016/12/20.
  */
 
-public class LocationData extends RealmObject {
+public class LocationData {
 
     private int id;
     private String name;
@@ -15,8 +18,8 @@ public class LocationData extends RealmObject {
     private String fax;
     private String url;
     private String memo;
-    private double locationX;
-    private double locationY;
+    private double lon;
+    private double alt;
 
     public int getId() {
         return id;
@@ -74,19 +77,35 @@ public class LocationData extends RealmObject {
         this.memo = memo;
     }
 
-    public double getLocationX() {
-        return locationX;
+    public double getLon() {
+        return lon;
     }
 
-    public void setLocationX(double locationX) {
-        this.locationX = locationX;
+    public void setLon(double lon) {
+        this.lon = lon;
     }
 
-    public double getLocationY() {
-        return locationY;
+    public double getAlt() {
+        return alt;
     }
 
-    public void setLocationY(double locationY) {
-        this.locationY = locationY;
+    public void setAlt(double alt) {
+        this.alt = alt;
+    }
+
+    public void importFromJson(JSONObject j) throws JSONException {
+        try{
+            this.id = 0; //Todo set id if need
+            this.name = j.getString("name");
+            this.address = j.getString("address");
+            this.tel = j.getString("tel");
+            this.fax = j.getString("fax");
+            this.url = j.getString("url");
+            this.memo = j.getString("memo");
+            this.lon = Double.parseDouble(j.getString("lon"));
+            this.alt = Double.parseDouble(j.getString("alt"));
+        } catch (Exception ex) {
+            Log.e("Tsuyamap", "fatal", ex);
+        }
     }
 }
