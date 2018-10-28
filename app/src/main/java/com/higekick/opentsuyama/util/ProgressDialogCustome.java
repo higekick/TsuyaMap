@@ -3,9 +3,11 @@ package com.higekick.opentsuyama.util;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 
 import com.higekick.opentsuyama.R;
 
@@ -38,7 +40,9 @@ public class ProgressDialogCustome extends ProgressDialog {
                 if (onDownloadFinishListener != null) {
                     onDownloadFinishListener.onDownloadFinish();
                 }
-                dismiss();
+                setMessage(context.getString(R.string.message_complete));
+                new Handler().postDelayed(() -> dismiss(),
+                        1500);
             }
         }
     }
@@ -46,7 +50,6 @@ public class ProgressDialogCustome extends ProgressDialog {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override

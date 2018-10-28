@@ -57,7 +57,7 @@ public class GalleryData extends AbstractContentData {
         }
         this.picUrls = new ArrayList<>();
         for(String file : files) {
-            if (!file.equals("dirname.txt")) {
+            if (file.endsWith(".jpg")) {
                 picUrls.add(pathDir + "/" + file);
             }
         }

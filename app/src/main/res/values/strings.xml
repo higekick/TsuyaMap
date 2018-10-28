@@ -140,6 +140,7 @@
     <string name="chk_terms_of_use">理解</string>
     <string name="title_now_download">ダウンロード中</string>
     <string name="message_pleasewait">お待ちください</string>
+    <string name="message_complete">完了しました</string>
     <string name="message_no_network">ネットワーク接続を確認してください。</string>
     <string name="message_error_network">ダウンロード中にエラーが発生しました。お手数ですがネットワーク接続を確認してください。</string>
 
