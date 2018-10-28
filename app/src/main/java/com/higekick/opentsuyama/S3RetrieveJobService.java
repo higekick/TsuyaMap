@@ -164,7 +164,6 @@ public class S3RetrieveJobService extends JobService {
             } catch (DecoderException ex) {
             }
             try {
-//                S3Object obj = c.getObject(s.getBucketName(), encodedResult);
                 String savePath = con.getFilesDir().getAbsolutePath() + "/" + mS3Path + "/" + dirName + "/" + fileName;
                 Log.d(TAG, savePath);
                 downloadFileFromS3(t, key, savePath);
@@ -176,10 +175,9 @@ public class S3RetrieveJobService extends JobService {
 
     private synchronized void observeDownloadAndBroadCastFinish() {
         mNotificationBuilder.setProgress(mSizeOfFile, mIndexOfFile.get(), false);
-        mNotificationBuilder.setContentText("ダウンロード中..." + mIndexOfFile + "/" + mSizeOfFile);
-        mNofificationManager.notify(1, mNotificationBuilder.build());
         sendBroadcastProgress();
        if (mIndexOfFile.get() >= mSizeOfFile) {
+           // finish
            Intent intent = new Intent(Const.ACTION_RETRIEVE_FINISH);
            Log.d(TAG, "Download finish and send broadcast");
            sendBroadcast(intent);
@@ -198,6 +196,10 @@ public class S3RetrieveJobService extends JobService {
                    .setAutoCancel(true)
                    .build();
            mNofificationManager.notify(1,notification);
+       } else {
+           // downloading
+           mNotificationBuilder.setContentText("ダウンロード中..." + mIndexOfFile + "/" + mSizeOfFile);
+           mNofificationManager.notify(1, mNotificationBuilder.build());
        }
     }
 
